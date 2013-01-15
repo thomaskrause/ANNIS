@@ -191,3 +191,10 @@ CREATE TABLE annotations
   toplevel_corpus integer NOT NULL REFERENCES corpus (id) ON DELETE CASCADE,
   PRIMARY KEY (id)
 );
+
+CREATE TABLE user_config
+(
+  id varchar NOT NULL,
+  config json,
+  PRIMARY KEY(id)
+);

@@ -84,7 +84,7 @@ CREATE TABLE facts_node (
   seg_name varchar,
   seg_index integer,
   node_anno_ref bigint REFERENCES annotation_pool(id),
-  n_sample boolean,
+  node_anno_nr integer,
   PRIMARY KEY (fid)
 );
 CREATE TABLE facts_edge (
@@ -101,7 +101,7 @@ CREATE TABLE facts_edge (
   edge_namespace varchar, -- optional namespace of the edges’ names
   edge_name varchar, -- name of the edges in this component
   edge_anno_ref bigint REFERENCES annotation_pool(id),
-  r_c_sample boolean,
+  edge_anno_nr integer,
   PRIMARY KEY (fid)
 );
 
@@ -199,4 +199,11 @@ CREATE TABLE annotations
   edge_name varchar,
   toplevel_corpus integer NOT NULL REFERENCES corpus (id) ON DELETE CASCADE,
   PRIMARY KEY (id)
+);
+
+CREATE TABLE user_config
+(
+  id varchar NOT NULL,
+  config json,
+  PRIMARY KEY(id)
 );

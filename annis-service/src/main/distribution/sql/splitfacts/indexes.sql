@@ -152,9 +152,9 @@ CREATE INDEX idx__facts_root__:id
 CREATE INDEX idx__2nd_query_:id ON facts_node_:id (text_ref,left_token, right_token);
 
 -- allow simple searches (node, tok etc)
-CREATE INDEX idx__sample_n__:id ON facts_node_:id(n_sample);
-CREATE INDEX idx__sample_n_tok__:id ON facts_node_:id(n_sample) WHERE is_token = TRUE;
-CREATE INDEX idx__sample_n_r_c__:id ON facts_edge_:id(r_c_sample);
+CREATE INDEX idx__facts_node_anno_nr__:id ON facts_node_:id(node_anno_nr);
+CREATE INDEX idx__facts_node_anno_nrtok__:id ON facts_node_:id(node_anno_nr) WHERE is_token = TRUE;
+CREATE INDEX idx__facts_edge_anno_nr__:id ON facts_edge_:id(edge_anno_nr);
 
 
 

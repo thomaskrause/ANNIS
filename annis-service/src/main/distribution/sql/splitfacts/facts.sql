@@ -94,12 +94,12 @@ INSERT INTO facts_node_:id
   seg_name,
   seg_index,
   node_anno_ref,
-  n_sample
+  node_anno_nr
 )
 
 SELECT
   *,
-  (row_number() OVER (PARTITION BY id) = 1) AS n_sample
+  (row_number() OVER (PARTITION BY id)) AS node_anno_nr
 FROM
 (
   SELECT
@@ -159,14 +159,14 @@ INSERT INTO facts_edge_:id
   edge_namespace,
   edge_name,
   edge_anno_ref,
-  r_c_sample
+  edge_anno_nr
 )
 
 SELECT
   *,
   (row_number() OVER (PARTITION BY node_ref,
                                   parent,
-                                  component_id) = 1) AS r_c_sample
+                                  component_id)) AS edge_anno_nr
 FROM
 (
   SELECT
@@ -196,10 +196,3 @@ FROM
     LEFT JOIN _edge_annotation ON (_edge_annotation.rank_ref = _rank.id)
 ) as tmp
 ;
-
-CREATE TABLE user_config
-(
-  id varchar NOT NULL,
-  config json,
-  PRIMARY KEY(id)
-);
