@@ -5,30 +5,18 @@ DROP TABLE IF EXISTS rank_:id;
 DROP TABLE IF EXISTS node_annotation_:id;
 DROP TABLE IF EXISTS edge_annotation_:id;
 
--- add is_token column to _node
-ALTER TABLE _node ADD COLUMN is_token boolean;
-ALTER TABLE _node DROP COLUMN seg_right;
-ALTER TABLE _node RENAME COLUMN seg_left TO seg_index;
-
-UPDATE _node SET is_token = token_index IS NOT NULL;
-
-ALTER TABLE _component ADD COLUMN toplevel_corpus integer;
-UPDATE _component SET toplevel_corpus = :id;
-
-ALTER TABLE _rank ADD COLUMN toplevel_corpus integer;
-UPDATE _rank SET toplevel_corpus = :id;
-ALTER TABLE _rank ALTER COLUMN toplevel_corpus SET NOT NULL;
-
-COMMIT;
-
-ALTER TABLE _node INHERIT node;
-ALTER TABLE _component INHERIT component;
-ALTER TABLE _rank INHERIT rank;
-
-ALTER TABLE _node RENAME TO node_:id;
-ALTER TABLE _component RENAME TO component_:id;
-ALTER TABLE _rank RENAME TO rank_:id;
-
+CREATE TABLE node_:id (
+  CHECK(toplevel_corpus = :id)
+) INHERITS(node);
+INSERT INTO node_:id(
+  id, text_ref, corpus_ref, toplevel_corpus, "namespace", "name", 
+  "left", "right", token_index, is_token, continuous, span, 
+  left_token, right_token, seg_name, seg_index)
+SELECT
+  id, text_ref, corpus_ref, :id, "namespace", "name", 
+  "left", "right", token_index, token_index IS NOT NULL, continuous, span,
+  left_token, right_token, seg_name, seg_left
+FROM _node;
 
 CREATE TABLE node_annotation_:id (
   CHECK(toplevel_corpus = :id)
@@ -40,6 +28,21 @@ SELECT
   "name" || ':' || "value",
   :id
 FROM _node_annotation;
+
+CREATE TABLE component_:id (
+  CHECK(toplevel_corpus = :id)
+) INHERITS(component);
+INSERT INTO component_:id (id, "type", "namespace", "name", toplevel_corpus)
+SELECT id, "type", "namespace", "name", :id
+FROM _component;
+
+CREATE TABLE rank_:id (
+  CHECK(toplevel_corpus = :id)
+) INHERITS(rank);
+INSERT INTO rank_:id (node_ref, id, pre, post, parent, root, "level", 
+  component_ref, toplevel_corpus)
+SELECT node_ref, id, pre, post, parent, root, "level", component_ref, :id
+FROM _rank;
   
 
 CREATE TABLE edge_annotation_:id (

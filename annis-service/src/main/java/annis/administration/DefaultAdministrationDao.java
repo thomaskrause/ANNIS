@@ -76,6 +76,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   private Map<String, String> mimeTypeMapping;
   private Map<String, String> tableInsertSelect;
   private Map<String, String> tableInsertFrom;
+  
   /**
    * The name of the file and the relation containing the resolver information.
    */
@@ -1290,5 +1291,4 @@ public class DefaultAdministrationDao implements AdministrationDao
   {
     this.tableInsertFrom = tableInsertFrom;
   }
-  
 }
