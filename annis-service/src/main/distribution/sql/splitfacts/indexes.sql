@@ -61,8 +61,7 @@ CREATE INDEX idx__node_right_token__:id
 CREATE INDEX idx__node_span__:id
   ON node_:id
   USING btree
-  (span varchar_pattern_ops)
-WHERE is_token IS TRUE;
+  (span varchar_pattern_ops);
 
 
 CREATE INDEX idx__node_token_index__:id
@@ -81,22 +80,9 @@ CREATE INDEX idx__node_text_ref_index__:id
   (text_ref);
 
 -- component
-CREATE INDEX idx__component_name__:id
-  ON component_:id
-  USING btree
-  ("name" varchar_pattern_ops, id);
-
-
-CREATE INDEX idx__component_namespace__:id
-  ON component_:id
-  USING btree
-  (namespace varchar_pattern_ops, id);
-
-
-CREATE INDEX idx__component_type__:id
-  ON component_:id
-  USING btree
-  ("type", id);
+CREATE INDEX idx__component_dominance__:id ON component_:id ("name", id) WHERE type='d';
+CREATE INDEX idx__component_precedence__:id ON component_:id ("name", id) WHERE type='p'; 
+CREATE INDEX idx__component_coverage__:id ON component_:id ("name", id) WHERE type='c';
 
 -- rank
 
