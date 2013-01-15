@@ -106,7 +106,7 @@ CREATE :tmp TABLE _node_annotation
 -- unique combinantion of node_ref, namespace and name
 CREATE :tmp TABLE _edge_annotation
 (
-	rank_ref		bigint	NOT NULL,	-- foreign key to _rank.pre
+	rank_ref		integer	NOT NULL,	-- foreign key to _rank.pre
 	namespace		varchar,
 	name			varchar NOT NULL,
 	value			varchar

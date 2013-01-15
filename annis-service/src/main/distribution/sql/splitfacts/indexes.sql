@@ -3,159 +3,161 @@ BEGIN; -- transaction
 -- FACTS --
 -----------
 
------ facts_node
+----- node
 
-CREATE INDEX idx__facts_id__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_id__:id
+  ON node_:id
   USING btree
   (id);
 
-CREATE INDEX idx__facts_is_token__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_is_token__:id
+  ON node_:id
   USING btree
   (is_token);
 
-CREATE INDEX idx__facts_left__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_left__:id
+  ON node_:id
   USING btree
   ("left");
 
 
-CREATE INDEX idx__facts_left_token__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_left_token__:id
+  ON node_:id
   USING btree
   (left_token);
 
-CREATE INDEX idx__facts_seg_name_index__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_seg_name_index__:id
+  ON node_:id
   USING btree
   (seg_name);
 
-CREATE INDEX idx__facts_seg_index_index__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_seg_index_index__:id
+  ON node_:id
   USING btree
   (seg_index);
 
-CREATE INDEX idx__facts_node_anno__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_name__:id
+  ON node_:id
   USING btree
-  (node_anno_ref);
+  ("name" varchar_pattern_ops);
 
-CREATE INDEX idx__facts_node_name__:id
-  ON facts_node_:id
+
+CREATE INDEX idx__node_namespace__:id
+  ON node_:id
   USING btree
-  (node_name varchar_pattern_ops);
+  (namespace varchar_pattern_ops);
 
-
-CREATE INDEX idx__facts_node_namespace__:id
-  ON facts_node_:id
-  USING btree
-  (node_namespace varchar_pattern_ops);
-
-CREATE INDEX idx__facts_right__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_right__:id
+  ON node_:id
   USING btree
   ("right");
 
 
-CREATE INDEX idx__facts_right_token__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_right_token__:id
+  ON node_:id
   USING btree
   (right_token);
 
-CREATE INDEX idx__facts_span__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_span__:id
+  ON node_:id
   USING btree
-  (span varchar_pattern_ops);
+  (span varchar_pattern_ops)
+WHERE is_token IS TRUE;
 
 
-CREATE INDEX idx__facts_token_index__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_token_index__:id
+  ON node_:id
   USING btree
   (token_index);
 
-CREATE INDEX idx__facts_corpus_ref_index__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_corpus_ref_index__:id
+  ON node_:id
   USING btree
   (corpus_ref);
 
-CREATE INDEX idx__facts_text_ref_index__:id
-  ON facts_node_:id
+CREATE INDEX idx__node_text_ref_index__:id
+  ON node_:id
   USING btree
   (text_ref);
 
------ facts_edge
-
-CREATE INDEX idx__facts_component_id__:id
-  ON facts_edge_:id
+-- component
+CREATE INDEX idx__component_name__:id
+  ON component_:id
   USING btree
-  (component_id);
+  ("name" varchar_pattern_ops, id);
 
 
-CREATE INDEX idx__facts_edge_name__:id
-  ON facts_edge_:id
+CREATE INDEX idx__component_namespace__:id
+  ON component_:id
   USING btree
-  (edge_name varchar_pattern_ops);
+  (namespace varchar_pattern_ops, id);
 
 
-CREATE INDEX idx__facts_edge_namespace__:id
-  ON facts_edge_:id
+CREATE INDEX idx__component_type__:id
+  ON component_:id
   USING btree
-  (edge_namespace varchar_pattern_ops);
+  ("type", id);
 
+-- rank
 
-CREATE INDEX idx__facts_edge_type__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_level__:id
+  ON rank_:id
   USING btree
-  (edge_type);
+  ("level", node_ref);
 
-CREATE INDEX idx__facts_level__:id
-  ON facts_edge_:id
-  USING btree
-  ("level");
 
-CREATE INDEX idx__facts_edge_annotation__:id
-  ON facts_edge_:id
-  USING btree
-  (edge_anno_ref);
-
-CREATE INDEX idx__facts_egde_node_ref__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_node_ref__:id
+  ON rank_:id
   USING btree
   (node_ref);
 
 
-CREATE INDEX idx__facts_parent__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_parent__:id
+  ON rank_:id
   USING btree
-  (parent);
+  (parent, node_ref);
 
 
-CREATE INDEX idx__facts_post__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_post__:id
+  ON rank_:id
   USING btree
-  (post);
+  (post, node_ref);
 
 
-CREATE INDEX idx__facts_pre__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_pre__:id
+  ON rank_:id
   USING btree
-  (pre);
+  (pre, node_ref);
 
-CREATE INDEX idx__facts_root__:id
-  ON facts_edge_:id
+CREATE INDEX idx__rank_root__:id
+  ON rank_:id
   USING btree
-  (root);
+  (root, node_ref);
 
+-- node_annotation
+CREATE INDEX idx__node_annotation_val__:id
+  ON node_annotation_:id
+  USING btree
+  (val varchar_pattern_ops, node_ref);
+
+CREATE INDEX idx__node_annotation_val_ns__:id
+  ON node_annotation_:id
+  USING btree
+  (val_ns varchar_pattern_ops, node_ref);
+
+-- edge_annotation
+CREATE INDEX idx__edge_annotation_val__:id
+  ON edge_annotation_:id
+  USING btree
+  (val varchar_pattern_ops, rank_ref);
+
+CREATE INDEX idx__edge_annotation_val_ns__:id
+  ON edge_annotation_:id
+  USING btree
+  (val_ns varchar_pattern_ops, rank_ref);
 
 ----- 2nd query
-CREATE INDEX idx__2nd_query_:id ON facts_node_:id (text_ref,left_token, right_token);
-
--- allow simple searches (node, tok etc)
-CREATE INDEX idx__facts_node_anno_nr__:id ON facts_node_:id(node_anno_nr);
-CREATE INDEX idx__facts_node_anno_nrtok__:id ON facts_node_:id(node_anno_nr) WHERE is_token = TRUE;
-CREATE INDEX idx__facts_edge_anno_nr__:id ON facts_edge_:id(edge_anno_nr);
-
+CREATE INDEX idx__2nd_query_:id ON node_:id (text_ref,left_token, right_token);
 
 
 END; -- transaction

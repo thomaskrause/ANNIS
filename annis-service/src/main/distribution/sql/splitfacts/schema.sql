@@ -51,28 +51,13 @@ COMMENT ON COLUMN text.id IS 'primary key';
 COMMENT ON COLUMN text.name IS 'informational name of the primary data text';
 COMMENT ON COLUMN text.text IS 'raw text data';
 
-CREATE TYPE annotype AS ENUM ('node', 'edge', 'segmentation');
--- collect all node annotations
-CREATE TABLE annotation_pool (
-  id bigserial,
-  toplevel_corpus integer REFERENCES corpus(id),
-  namespace varchar,
-  "name" varchar,
-  val varchar,
-  "type" annotype,
-  occurences bigint,
-  PRIMARY KEY(id),
-  UNIQUE(namespace, "name", val, "type", toplevel_corpus)
-);
-
-CREATE TABLE facts_node (
-  fid bigserial,
+CREATE TABLE node (
   id bigint,
   text_ref integer,
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  node_namespace varchar,
-  node_name varchar,
+  "namespace" varchar,
+  "name" varchar,
   "left" integer,
   "right" integer,
   token_index integer,
@@ -83,38 +68,47 @@ CREATE TABLE facts_node (
   right_token integer,
   seg_name varchar,
   seg_index integer,
-  node_anno_ref bigint REFERENCES annotation_pool(id),
-  node_anno_nr integer,
-  PRIMARY KEY (fid)
+  PRIMARY KEY (id)
 );
-CREATE TABLE facts_edge (
-  fid bigserial,
-  node_ref bigint, -- node reference
+
+CREATE TABLE node_annotation
+(
+	node_ref 				bigint	REFERENCES node(id),
+	val_ns          varchar, 
+	val             varchar,
   toplevel_corpus integer REFERENCES corpus(id),
-  pre integer, -- pre-order value
-  post integer, -- post-order value
+  PRIMARY KEY (node_ref, val_ns)
+);
+
+CREATE TABLE component (
+  id integer PRIMARY KEY,
+  "type" character(1), -- edge type of this component
+  namespace varchar, -- optional namespace of the edges’ names
+  "name" varchar, -- name of the edges in this component
+  toplevel_corpus integer REFERENCES corpus(id)
+);
+
+CREATE TABLE rank (
+  node_ref bigint REFERENCES node(id), -- node reference
+  id integer PRIMARY KEY,
+  pre integer NOT NULL, -- pre-order value
+  post integer NOT NULL, -- post-order value
   parent integer, -- foreign key to rank.pre of the parent node, or NULL for roots
   root boolean,
   "level" integer,
-  component_id integer, -- component id
-  edge_type character(1), -- edge type of this component
-  edge_namespace varchar, -- optional namespace of the edges’ names
-  edge_name varchar, -- name of the edges in this component
-  edge_anno_ref bigint REFERENCES annotation_pool(id),
-  edge_anno_nr integer,
-  PRIMARY KEY (fid)
+  component_ref integer REFERENCES component(id), -- component id
+  toplevel_corpus integer REFERENCES corpus(id),
+  UNIQUE (component_ref, pre, toplevel_corpus)
 );
 
--- from rank
-COMMENT ON COLUMN facts_edge.pre IS 'pre-order value';
-COMMENT ON COLUMN facts_edge.post IS 'post-order value';
-COMMENT ON COLUMN facts_edge.parent IS 'foreign key to rank.pre of the parent node, or NULL for roots';
-
--- from component
-COMMENT ON COLUMN facts_edge.component_id IS 'component id';
-COMMENT ON COLUMN facts_edge.edge_type IS 'edge type of this component';
-COMMENT ON COLUMN facts_edge.edge_namespace IS 'optional namespace of the edges’ names';
-COMMENT ON COLUMN facts_edge.edge_name IS 'name of the edges in this component';
+CREATE TABLE edge_annotation
+(
+	rank_ref 				integer	REFERENCES rank(id),
+	val_ns          varchar, 
+	val             varchar,
+  toplevel_corpus integer REFERENCES corpus(id),
+  PRIMARY KEY (rank_ref, val_ns)
+);
 
 CREATE TABLE media_files
 (

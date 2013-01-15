@@ -1,198 +1,54 @@
 --- :id is replaced by code
-DROP TABLE IF EXISTS facts_edge_:id;
-DROP TABLE IF EXISTS facts_node_:id;
-DROP TABLE IF EXISTS node_anno_:id;
-DROP TABLE IF EXISTS edge_anno_:id;
+DROP TABLE IF EXISTS node_:id;
+DROP TABLE IF EXISTS component_:id;
+DROP TABLE IF EXISTS rank_:id;
+DROP TABLE IF EXISTS node_annotation_:id;
+DROP TABLE IF EXISTS edge_annotation_:id;
 
----------------
--- NODE_ANNO --
----------------
+-- add is_token column to _node
+ALTER TABLE _node ADD COLUMN is_token boolean;
+ALTER TABLE _node DROP COLUMN seg_right;
+ALTER TABLE _node RENAME COLUMN seg_left TO seg_index;
 
-CREATE TABLE annotation_pool_:id
-(
-  PRIMARY KEY(id),
+UPDATE _node SET is_token = token_index IS NOT NULL;
+
+ALTER TABLE _component ADD COLUMN toplevel_corpus integer;
+UPDATE _component SET toplevel_corpus = :id;
+
+ALTER TABLE _rank ADD COLUMN toplevel_corpus integer;
+UPDATE _rank SET toplevel_corpus = :id;
+ALTER TABLE _rank ALTER COLUMN toplevel_corpus SET NOT NULL;
+
+COMMIT;
+
+ALTER TABLE _node INHERIT node;
+ALTER TABLE _component INHERIT component;
+ALTER TABLE _rank INHERIT rank;
+
+ALTER TABLE _node RENAME TO node_:id;
+ALTER TABLE _component RENAME TO component_:id;
+ALTER TABLE _rank RENAME TO rank_:id;
+
+
+CREATE TABLE node_annotation_:id (
   CHECK(toplevel_corpus = :id)
-)
-INHERITS(annotation_pool);
+) INHERITS(node_annotation);
+INSERT INTO node_annotation_:id(node_ref, val_ns, val, toplevel_corpus)
+SELECT 
+  node_ref, 
+  namespace || ':' || "name" || ':' || "value",
+  "name" || ':' || "value",
+  :id
+FROM _node_annotation;
+  
 
-INSERT INTO annotation_pool_:id(toplevel_corpus, namespace, "name", val, "type", occurences)
-(
-  SELECT :id, namespace, "name", "value", 'node', count(*) as occurences
-  FROM  _node_annotation
-  GROUP BY namespace, "name", "value"
-);
-
----------------
--- EDGE_ANNO --
----------------
-
-
-INSERT INTO annotation_pool_:id(toplevel_corpus, namespace, "name", val, "type", occurences)
-(
-  SELECT :id, namespace, "name", "value", 'edge', count(*) as occurences
-  FROM  _edge_annotation
-  GROUP BY namespace, "name", "value"
-);
-
-------------------
--- ANNO INDEXES --
-------------------
-
-
--- indexes on node annotations
-CREATE INDEX idx__node_annotation_pool_name__:id ON annotation_pool_:id (
-  "name" varchar_pattern_ops, val varchar_pattern_ops
-) WHERE "type" = 'node';
-CREATE INDEX idx__node_annotation_pool_namespace__:id ON annotation_pool_:id (
-  namespace varchar_pattern_ops, "name" varchar_pattern_ops, val varchar_pattern_ops
-) WHERE "type" = 'node';
-CREATE INDEX idx__node_annotation_pool_occurences__:id ON annotation_pool_:id (occurences) 
-  WHERE "type" = 'node';
-
-
--- indexes on edge annotations
-CREATE INDEX idx__edge_annotation_pool_name__:id ON annotation_pool_:id (
-  "name" varchar_pattern_ops, val varchar_pattern_ops
-) WHERE "type" = 'edge';
-CREATE INDEX idx__edge_annotation_pool_namespace__:id ON annotation_pool_:id (
-  namespace varchar_pattern_ops, "name" varchar_pattern_ops, val varchar_pattern_ops
-) WHERE "type" = 'edge';
-CREATE INDEX idx__edge_annotation_pool_occurences__:id ON annotation_pool_:id (occurences)
-  WHERE "type" = 'edge';
-
------------------
--- FACTS: node --
------------------
-
-CREATE TABLE facts_node_:id
-(
-  -- temporary columns for calculating the sample_*
-  PRIMARY KEY(fid),
-  -- check constraints
+CREATE TABLE edge_annotation_:id (
   CHECK(toplevel_corpus = :id)
-)
-INHERITS (facts_node);
-
-
-
-INSERT INTO facts_node_:id
-(
-  id,
-  text_ref,
-  corpus_ref,
-  toplevel_corpus,
-  node_namespace,
-  node_name,
-  "left",
-  "right",
-  token_index,
-  is_token,
-  continuous,
-  span,
-  left_token,
-  right_token,
-  seg_name,
-  seg_index,
-  node_anno_ref,
-  node_anno_nr
-)
-
-SELECT
-  *,
-  (row_number() OVER (PARTITION BY id)) AS node_anno_nr
-FROM
-(
-  SELECT
-    _node.id AS id,
-    _node.text_ref AS text_ref,
-    _node.corpus_ref AS corpus_ref,
-    :id AS toplevel_corpus,
-    _node.namespace AS node_namespace,
-    _node.name AS node_name,
-    _node."left" AS "left",
-    _node."right" AS "right",
-    _node.token_index AS token_index,
-    (_node.token_index IS NOT NULL) AS is_token,
-    _node.continuous AS continuous,
-    _node.span AS span,
-    _node.left_token AS left_token,
-    _node.right_token AS right_token,
-    _node.seg_name AS seg_name,
-    _node.seg_left AS seg_index,
-    (SELECT id FROM annotation_pool_:id AS na 
-      WHERE na.namespace IS NOT DISTINCT FROM _node_annotation.namespace
-        AND na."name" = _node_annotation."name"
-        AND na.val = _node_annotation."value"
-        AND na."type" = 'node'
-    ) AS node_anno_ref
-  FROM
-    _node
-    LEFT JOIN _node_annotation ON (_node_annotation.node_ref = _node.id)
-) as tmp
-;
-
------------------
--- FACTS: edge --
------------------
-
-CREATE TABLE facts_edge_:id
-(
-  -- temporary columns for calculating the sample_*
-  PRIMARY KEY(fid),
-  -- check constraints
-  CHECK(toplevel_corpus = :id)
-)
-INHERITS (facts_edge);
-
-
-INSERT INTO facts_edge_:id
-(
-  toplevel_corpus,
-  node_ref,
-  pre,
-  post,
-  parent,
-  root,
-  "level",
-  component_id,
-  edge_type,
-  edge_namespace,
-  edge_name,
-  edge_anno_ref,
-  edge_anno_nr
-)
-
-SELECT
-  *,
-  (row_number() OVER (PARTITION BY node_ref,
-                                  parent,
-                                  component_id)) AS edge_anno_nr
-FROM
-(
-  SELECT
-    :id AS toplevel_corpus,
-
-    _rank.node_ref AS node_ref,
-    _rank.pre AS pre,
-    _rank.post AS post,
-    _rank.parent AS parent,
-    _rank.root AS root,
-    _rank.level AS level,
-
-    _component.id AS component_id,
-    _component.type AS edge_type,
-    _component.namespace AS edge_namespace,
-    _component.name AS edge_name,
-
-    (SELECT id FROM annotation_pool_:id AS ea 
-      WHERE ea.namespace IS NOT DISTINCT FROM _edge_annotation.namespace
-        AND ea."name" = _edge_annotation."name"
-        AND ea.val = _edge_annotation."value"
-        AND ea."type" = 'edge'
-    ) AS edge_anno_ref
-  FROM
-    _rank
-    JOIN _component ON (_rank.component_ref = _component.id)
-    LEFT JOIN _edge_annotation ON (_edge_annotation.rank_ref = _rank.id)
-) as tmp
-;
+) INHERITS(edge_annotation);
+INSERT INTO edge_annotation_:id(rank_ref, val_ns, val, toplevel_corpus)
+SELECT 
+  rank_ref, 
+  namespace || ':' || "name" || ':' || "value",
+  "name" || ':' || "value",
+  :id
+FROM _edge_annotation;

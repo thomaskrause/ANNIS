@@ -664,7 +664,10 @@ public class DefaultAdministrationDao implements AdministrationDao
   {
     MapSqlParameterSource args = makeArgs().addValue(":id", corpusID);
     log.info("updating statistics for top-level corpus");
-    executeSqlFromScript("corpus_stats_upd.sql", args);
+    if (!executeSqlFromScript(dbLayout + "/corpus_stats_upd.sql", args))
+    {
+      executeSqlFromScript("corpus_stats_upd.sql", args);
+    }
   }
   
   void computeCorpusPath(long corpusID)

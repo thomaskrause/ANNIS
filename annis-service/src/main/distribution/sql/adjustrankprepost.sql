@@ -16,4 +16,6 @@ UPDATE _rank AS r SET
   parent = parent - (SELECT minpre FROM _premin AS m WHERE r.component_ref = m.component_ref)
 ;
 
+ALTER TABLE _rank ALTER COLUMN pre SET NOT NULL;
+
 DROP TABLE _premin;

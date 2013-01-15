@@ -316,7 +316,7 @@ limitations under the License.
     <ref bean="defaultWhereClauseGenerator" />
     <ref bean="subcorpusConstraintWhereClause" />
     <ref bean="metaDataAndCorpusWhereClauseGenerator" />
-    <ref bean="sampleWhereClause" />
+<!--    <ref bean="sampleWhereClause" /> -->
   </util:list>
 
   <!--

@@ -42,18 +42,35 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   @Override
   void analyzeFacts(long corpusID)
   {
-    log.info("analyzing facts_node table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE facts_node_"
-      + corpusID);
+    log.info("analyzing node table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ANALYZE node_" + corpusID);
 
-    log.info("analyzing facts_edge table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE facts_edge_"
-      + corpusID);
+    log.info("analyzing node_annotation table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ANALYZE node_annotation_" + corpusID);
     
-    log.info("analyzing general facts_node table");
-    getJdbcTemplate().execute("ANALYZE facts_node");
+    log.info("analyzing edge_annotation table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ANALYZE edge_annotation_" + corpusID);
+    
+    log.info("analyzing rank table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ANALYZE rank_" + corpusID);
 
-    log.info("analyzing general facts_edge table");
-    getJdbcTemplate().execute("ANALYZE facts_edge");
+    log.info("analyzing component table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ANALYZE component_" + corpusID);
+    
+    // general parent tables
+    log.info("analyzing general node table");
+    getJdbcTemplate().execute("ANALYZE node");
+    
+    log.info("analyzing general node_annotation table");
+    getJdbcTemplate().execute("ANALYZE node_annotation");
+    
+    log.info("analyzing general edge_annotation table");
+    getJdbcTemplate().execute("ANALYZE edge_annotation");
+    
+    log.info("analyzing general rank table");
+    getJdbcTemplate().execute("ANALYZE rank");
+
+    log.info("analyzing general component table");
+    getJdbcTemplate().execute("ANALYZE component");
   }
 }
