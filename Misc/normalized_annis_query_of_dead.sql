@@ -1,6 +1,6 @@
 ﻿-- no node duplication
 
--- "harmless"  cat="S" & "zu" & "Hause" & #1 >* #2 & #1 >* #3 & #2 .1,4 #3 query
+-- "harmless"  cat="S" & /d.*/ & /(e|f|h).*/ & #1 >* #2 & #1 >* #3 & #2 .1,4 #3 query
 SELECT 
   count(*)
 FROM
@@ -45,6 +45,5 @@ FROM
     node2.right_token BETWEEN SYMMETRIC node3.left_token - 1 AND node3.left_token - 40 AND
     node2.span ~ '^d.*$' AND
     node2.text_ref = node3.text_ref AND
-    node3.span ~ '^h.*$'
+    node3.span ~ '^(e|f|h).*$'
   ) AS solutions
-
