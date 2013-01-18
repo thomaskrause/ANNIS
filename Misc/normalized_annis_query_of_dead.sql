@@ -8,25 +8,29 @@ FROM
     SELECT DISTINCT
     node1.id AS id1, node2.id AS id2, node3.id AS id3, node1.toplevel_corpus
   FROM
-    node_1978 AS node1,
-    node_1978 AS node2,
-    node_1978 AS node3,
-    component_1978 AS component1,
-    component_1978 AS component2,
-    component_1978 AS component3,
-    rank_1978 AS rank1,
-    rank_1978 AS rank2,
-    rank_1978 AS rank3,
-    node_annotation_1978 AS node_annotation1
+    node_2171 AS node1,
+    node_2171 AS node2,
+    node_2171 AS node3,
+    component_2171 AS component1,
+    component_2171 AS component2,
+    component_2171 AS component3,
+    rank_2171 AS rank1,
+    rank_2171 AS rank2,
+    rank_2171 AS rank3,
+    node_annotation_2171 AS node_annotation1
   WHERE
     -- TODO: joins on source tables
     rank1.component_ref = component1.id AND
     rank2.component_ref = component2.id AND
     rank3.component_ref = component3.id AND
     rank1.node_ref = node1.id AND
+    rank1.corpus_ref = node1.corpus_ref AND
     rank2.node_ref = node2.id AND
+    rank2.corpus_ref = node2.corpus_ref AND
     rank3.node_ref = node3.id AND
+    rank3.corpus_ref = node3.corpus_ref AND
     node_annotation1.node_ref = node1.id AND
+    node_annotation1.corpus_ref = node1.corpus_ref AND
     -- real restrictions
     component1.id = component3.id AND
     component1.id = component2.id AND
@@ -45,5 +49,6 @@ FROM
     node2.right_token BETWEEN SYMMETRIC node3.left_token - 1 AND node3.left_token - 40 AND
     node2.span ~ '^d.*$' AND
     node2.text_ref = node3.text_ref AND
+    --node3.span = 'Haus'
     node3.span ~ '^(e|f|h).*$'
   ) AS solutions

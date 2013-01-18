@@ -28,12 +28,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -297,7 +299,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   @Transactional(readOnly = false)
   public void importCorpus(String path)
   {
-
+    
     // check schema version first
     checkDatabaseSchemaVersion();
     
@@ -385,83 +387,86 @@ public class DefaultAdministrationDao implements AdministrationDao
           // count cols for detecting old resolver_vis_map table format
           File resolver_vis_tab = new File(path, table + ".tab");
           
-          BufferedReader bReader = new BufferedReader(
-            new InputStreamReader(new FileInputStream(resolver_vis_tab), "UTF-8"));
-          String firstLine = bReader.readLine();
-          bReader.close();
-          
-          int cols = 9; // default number
-          if (firstLine != null)
+          if(resolver_vis_tab.exists() && resolver_vis_tab.isFile())
           {
-            String[] entries = firstLine.split("\t");
-            cols = entries.length;            
-            log.debug("the first row: {} amount of cols: {}", entries, cols);
-          }
+            BufferedReader bReader = new BufferedReader(
+              new InputStreamReader(new FileInputStream(resolver_vis_tab),
+              "UTF-8"));
+            String firstLine = bReader.readLine();
+            bReader.close();
 
-          switch (cols)
-          {
-            // old format
-            case 8:
-              StringBuilder sb = new StringBuilder();
-              sb.append("CREATE TABLE tmp_resolver_vis_map ");
-              sb.append("( ");
-              sb.append("\"corpus\"   varchar, ");
-              sb.append("\"version\" 	varchar, ");
-              sb.append("\"namespace\"	varchar, ");
-              sb.append("\"element\"    varchar, ");
-              sb.append("\"vis_type\"   varchar NOT NULL, ");
-              sb.append("\"display_name\"   varchar NOT NULL, ");
-              sb.append("\"order\" integer default '0', ");
-              sb.append("\"mappings\" varchar");
-              sb.append(");");
-              
-              jdbcTemplate.execute(sb.toString());
-              
-              bulkloadTableFromResource("tmp_resolver_vis_map",
-                new FileSystemResource(resolver_vis_tab));
-              
-              sb = new StringBuilder();
-              
-              sb.append("INSERT INTO ");
-              sb.append(tableInStagingArea(FILE_RESOLVER_VIS_MAP));
-              sb.append("\n\t");
-              sb.append(" (");
-              sb.append("corpus, ");
-              sb.append("version, ");
-              sb.append("namespace, ");
-              sb.append("element, ");
-              sb.append("vis_type, ");
-              sb.append("display_name, ");
-              sb.append("\"order\", ");
-              sb.append("mappings");
-              sb.append(")");
-              sb.append("\n");
-              sb.append("SELECT tmp.corpus, ");
-              sb.append("tmp.version, ");
-              sb.append("tmp.namespace, ");
-              sb.append("tmp.element, ");
-              sb.append("tmp.vis_type, ");
-              sb.append("tmp.display_name, ");
-              sb.append("tmp.\"order\", ");
-              sb.append("tmp.mappings");
-              sb.append("\n\t");
-              sb.append("FROM tmp_resolver_vis_map AS tmp; ");
-              
-              jdbcTemplate.execute(sb.toString());
-              jdbcTemplate.execute("DROP TABLE tmp_resolver_vis_map;");
-              
-              break;
+            int cols = 9; // default number
+            if (firstLine != null)
+            {
+              String[] entries = firstLine.split("\t");
+              cols = entries.length;
+              log.debug("the first row: {} amount of cols: {}", entries, cols);
+            }
 
-            // new format
-            case 9:
-              bulkloadTableFromResource(tableInStagingArea(table),
-                new FileSystemResource(new File(path, table + ".tab")));
-              break;
-            default:
-              log.error("invalid amount of cols");
-              throw new RuntimeException();
+            switch (cols)
+            {
+              // old format
+              case 8:
+                StringBuilder sb = new StringBuilder();
+                sb.append("CREATE TABLE tmp_resolver_vis_map ");
+                sb.append("( ");
+                sb.append("\"corpus\"   varchar, ");
+                sb.append("\"version\" 	varchar, ");
+                sb.append("\"namespace\"	varchar, ");
+                sb.append("\"element\"    varchar, ");
+                sb.append("\"vis_type\"   varchar NOT NULL, ");
+                sb.append("\"display_name\"   varchar NOT NULL, ");
+                sb.append("\"order\" integer default '0', ");
+                sb.append("\"mappings\" varchar");
+                sb.append(");");
+
+                jdbcTemplate.execute(sb.toString());
+
+                bulkloadTableFromResource("tmp_resolver_vis_map",
+                  new FileSystemResource(resolver_vis_tab));
+
+                sb = new StringBuilder();
+
+                sb.append("INSERT INTO ");
+                sb.append(tableInStagingArea(FILE_RESOLVER_VIS_MAP));
+                sb.append("\n\t");
+                sb.append(" (");
+                sb.append("corpus, ");
+                sb.append("version, ");
+                sb.append("namespace, ");
+                sb.append("element, ");
+                sb.append("vis_type, ");
+                sb.append("display_name, ");
+                sb.append("\"order\", ");
+                sb.append("mappings");
+                sb.append(")");
+                sb.append("\n");
+                sb.append("SELECT tmp.corpus, ");
+                sb.append("tmp.version, ");
+                sb.append("tmp.namespace, ");
+                sb.append("tmp.element, ");
+                sb.append("tmp.vis_type, ");
+                sb.append("tmp.display_name, ");
+                sb.append("tmp.\"order\", ");
+                sb.append("tmp.mappings");
+                sb.append("\n\t");
+                sb.append("FROM tmp_resolver_vis_map AS tmp; ");
+
+                jdbcTemplate.execute(sb.toString());
+                jdbcTemplate.execute("DROP TABLE tmp_resolver_vis_map;");
+
+                break;
+
+              // new format
+              case 9:
+                bulkloadTableFromResource(tableInStagingArea(table),
+                  new FileSystemResource(new File(path, table + ".tab")));
+                break;
+              default:
+                log.error("invalid amount of cols");
+                throw new RuntimeException();
+            }
           }
-          
         }
         catch (IOException e)
         {
@@ -691,7 +696,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   {
     log.info("updating pre and post order in _rank");
     executeSqlFromScript("adjustrankprepost.sql");
-    log.info("analyzing _rank");
+    log.debug("analyzing _rank");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("rank"));
   }
   
@@ -699,7 +704,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   {
     log.info("updating id in _text and text_ref in _node");
     executeSqlFromScript("adjusttextid.sql");
-    log.info("analyzing _node and _text");
+    log.debug("analyzing _node and _text");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("text"));
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("node"));
   }
@@ -721,8 +726,8 @@ public class DefaultAdministrationDao implements AdministrationDao
     {
       recentCorpusId = jdbcTemplate.queryForLong(
         "SELECT max(id) FROM corpus_stats");
-      log.info("the id from recently imported corpus:" + recentCorpusId);
-    }
+      log.debug("the id from recently imported corpus:" + recentCorpusId);
+    } 
     
     MapSqlParameterSource args = makeArgs().addValue(":id", recentCorpusId);
     
@@ -731,7 +736,7 @@ public class DefaultAdministrationDao implements AdministrationDao
       executeSqlFromScript("update_ids.sql", args);
     }
     
-    log.info("query for the new corpus ID");
+    log.debug("query for the new corpus ID");
     long result = jdbcTemplate.queryForLong(
       "SELECT MAX(id) FROM _corpus WHERE top_level IS TRUE;");
     log.info("new corpus ID is " + result);
@@ -831,9 +836,10 @@ public class DefaultAdministrationDao implements AdministrationDao
   
   void analyzeStagingTables()
   {
+    
+    log.info("analyzing staging tables");
     for (String t : importedTables)
     {
-      log.info("analyzing " + t);
       jdbcTemplate.execute("ANALYZE " + tableInStagingArea(t));
     }
   }
