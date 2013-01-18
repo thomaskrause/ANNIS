@@ -1,5 +1,3 @@
-COMMIT;
-
 ALTER TABLE _node_annotation ADD COLUMN corpus_ref integer;
 UPDATE _node_annotation SET corpus_ref = (SELECT corpus_ref FROM _node WHERE node_ref = id);
 

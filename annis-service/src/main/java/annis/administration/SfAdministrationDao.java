@@ -37,13 +37,23 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     adjustRankPrePost();
     adjustTextId();
     adjustNodeId();
+    adjustComponentId();
+  }
+  
+  protected void adjustComponentId()
+  { 
+    log.info("adjusting component id");
+    executeSqlFromScript("adjustcomponentid.sql");
+    log.debug("analyzing _component and _rank");
+    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("component"));
+    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("rank"));
   }
 
   protected void adjustNodeId()
-  {
-    log.info("updating node id");
+  { 
+    log.info("adjusting node id");
     executeSqlFromScript("adjustnodeid.sql");
-    log.info("analyzing _node, _node_annotation and _rank");
+    log.debug("analyzing _node, _node_annotation and _rank");
     getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node"));
     getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node_annotation"));
     getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("rank"));

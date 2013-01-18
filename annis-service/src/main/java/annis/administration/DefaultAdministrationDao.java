@@ -694,7 +694,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   
   protected void adjustRankPrePost()
   {
-    log.info("updating pre and post order in _rank");
+    log.info("adjusting pre and post order in _rank");
     executeSqlFromScript("adjustrankprepost.sql");
     log.debug("analyzing _rank");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("rank"));
@@ -702,7 +702,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   
   protected void adjustTextId()
   {
-    log.info("updating id in _text and text_ref in _node");
+    log.info("adjusting id in _text and text_ref in _node");
     executeSqlFromScript("adjusttextid.sql");
     log.debug("analyzing _node and _text");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("text"));

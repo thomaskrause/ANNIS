@@ -42,31 +42,37 @@ FROM _node_annotation;
 
 --
 CREATE TABLE component_:id (
-  id integer PRIMARY KEY,
+  corpus_ref integer REFERENCES corpus (id),
+  id integer,
   toplevel_corpus integer REFERENCES corpus(id),
+
+  PRIMARY KEY(corpus_ref, id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(component);
 
-INSERT INTO component_:id (id, "type", "namespace", "name", toplevel_corpus)
-SELECT id, "type", "namespace", "name", :id
+INSERT INTO component_:id (corpus_ref, id, "type", "namespace", "name", toplevel_corpus)
+SELECT corpus_ref, id, "type", "namespace", "name", :id
 FROM _component;
 
 --
 CREATE TABLE rank_:id (
   corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
-  component_ref integer REFERENCES component_:id(id),
+  component_ref integer,
   toplevel_corpus integer REFERENCES corpus(id),
+
   CHECK(toplevel_corpus = :id),
-  UNIQUE (component_ref, pre, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id)
+
+  UNIQUE (corpus_ref, component_ref, pre, toplevel_corpus),
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id),
+  FOREIGN KEY (corpus_ref, component_ref) REFERENCES component_:id(corpus_ref, id)
 ) INHERITS(rank);
 
 INSERT INTO rank_:id (corpus_ref, node_ref, id, pre, post, parent, root, "level", 
   component_ref, toplevel_corpus)
 SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref, :id
 FROM _rank;
-  
+
 --
 CREATE TABLE edge_annotation_:id (
   rank_ref integer REFERENCES rank_:id(id),
