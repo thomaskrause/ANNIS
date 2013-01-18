@@ -62,9 +62,9 @@ CREATE TABLE rank_:id (
   FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id)
 ) INHERITS(rank);
 
-INSERT INTO rank_:id (node_ref, id, pre, post, parent, root, "level", 
+INSERT INTO rank_:id (corpus_ref, node_ref, id, pre, post, parent, root, "level", 
   component_ref, toplevel_corpus)
-SELECT node_ref, id, pre, post, parent, root, "level", component_ref, :id
+SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref, :id
 FROM _rank;
   
 --

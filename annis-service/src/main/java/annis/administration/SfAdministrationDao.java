@@ -15,6 +15,8 @@
  */
 package annis.administration;
 
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,4 +85,28 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.debug("analyzing general component table");
     getJdbcTemplate().execute("ANALYZE component");
   }
+
+  @Override
+  public void deleteCorpora(List<Long> ids)
+  {
+    for (long l : ids)
+    {
+      log.debug("dropping annotations table for corpus " + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS annotations_" + l);
+      
+      log.debug("dropping partitioned tables for corpus " + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS edge_annotation_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS node_annotation_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS rank_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS component_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS node_" + l);
+    }
+    
+    log.debug("recursivly deleting corpora: " + ids);
+    executeSqlFromScript("delete_corpus.sql", makeArgs().addValue(":ids",
+      StringUtils.join(ids, ", ")));
+  }
+  
+  
+  
 }

@@ -1022,7 +1022,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     return "_" + table;
   }
   
-  private MapSqlParameterSource makeArgs()
+  protected MapSqlParameterSource makeArgs()
   {
     return new MapSqlParameterSource();
   }
