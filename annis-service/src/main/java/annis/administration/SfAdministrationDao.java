@@ -30,6 +30,25 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   private static final Logger log = LoggerFactory.getLogger(AdministrationDao.class);
 
   @Override
+  protected void adjustIDs()
+  {
+    adjustRankPrePost();
+    adjustTextId();
+    adjustNodeId();
+  }
+
+  protected void adjustNodeId()
+  {
+    log.info("updating node id");
+    executeSqlFromScript("adjustnodeid.sql");
+    log.info("analyzing _node, _node_annotation and _rank");
+    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node"));
+    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node_annotation"));
+    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("rank"));
+  }
+  
+  
+  @Override
   public void populateSchema()
   {
     super.populateSchema();

@@ -313,8 +313,7 @@ public class DefaultAdministrationDao implements AdministrationDao
 
 //    if (true) return;
 
-    adjustRankPrePost();
-    adjustTextId();
+    adjustIDs();
     long corpusID = updateIds();
     
     importBinaryData(path);
@@ -366,8 +365,8 @@ public class DefaultAdministrationDao implements AdministrationDao
   void createStagingArea(boolean useTemporary)
   {
     log.info("creating staging area");
-    MapSqlParameterSource args = makeArgs().addValue(":tmp", useTemporary
-      ? "TEMPORARY" : "UNLOGGED");
+    // always use non-temporary tables on import (but drop them later if requested)
+    MapSqlParameterSource args = makeArgs().addValue(":tmp", "UNLOGGED");
     executeSqlFromScript("staging_area.sql", args);
   }
   
@@ -630,7 +629,10 @@ public class DefaultAdministrationDao implements AdministrationDao
   void computeRealRoot()
   {
     log.info("computing real root for rank");
-    executeSqlFromScript("root.sql");
+    if (!executeSqlFromScript(dbLayout + "/root.sql"))
+    {
+      executeSqlFromScript("root.sql");
+    }
   }
   
   void computeLevel()
@@ -679,6 +681,12 @@ public class DefaultAdministrationDao implements AdministrationDao
     executeSqlFromScript("compute_corpus_path.sql", args);
   }
   
+  protected void adjustIDs()
+  {
+    adjustRankPrePost();
+    adjustTextId();
+  }
+  
   protected void adjustRankPrePost()
   {
     log.info("updating pre and post order in _rank");
@@ -717,11 +725,15 @@ public class DefaultAdministrationDao implements AdministrationDao
     }
     
     MapSqlParameterSource args = makeArgs().addValue(":id", recentCorpusId);
-    executeSqlFromScript("update_ids.sql", args);
+    
+    if (!executeSqlFromScript(dbLayout + "/update_ids.sql", args))
+    {
+      executeSqlFromScript("update_ids.sql", args);
+    }
     
     log.info("query for the new corpus ID");
     long result = jdbcTemplate.queryForLong(
-      "SELECT MAX(toplevel_corpus) FROM _node");
+      "SELECT MAX(id) FROM _corpus WHERE top_level IS TRUE;");
     log.info("new corpus ID is " + result);
     return result;
   }
@@ -741,7 +753,10 @@ public class DefaultAdministrationDao implements AdministrationDao
   void applyConstraints()
   {
     log.info("activating relational constraints");
-    executeSqlFromScript("constraints.sql");
+    if (!executeSqlFromScript(dbLayout + "/constraints.sql"))
+    {
+      executeSqlFromScript("constraints.sql");
+    }
   }
   
   void insertCorpus()
@@ -996,7 +1011,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   }
 
   // tables in the staging area have their names prefixed with "_"
-  private String tableInStagingArea(String table)
+  protected String tableInStagingArea(String table)
   {
     return "_" + table;
   }
@@ -1073,6 +1088,7 @@ public class DefaultAdministrationDao implements AdministrationDao
 
   // executes an SQL script from $ANNIS_HOME/scripts, substituting the parameters found in args
   @Override
+  @Transactional(readOnly=false)
   public boolean executeSqlFromScript(String script, MapSqlParameterSource args)
   {
     File fScript = new File(scriptPath, script);

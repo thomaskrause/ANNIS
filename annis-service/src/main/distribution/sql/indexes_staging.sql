@@ -13,4 +13,7 @@ CREATE INDEX ON _rank (pre, component_ref);
 CREATE INDEX ON _component ("type");
 CREATE INDEX ON _edge_annotation (rank_ref);
 
+-- help to calculate level
+CREATE INDEX ON _rank (pre, component_ref, parent);
+
 END; -- transaction

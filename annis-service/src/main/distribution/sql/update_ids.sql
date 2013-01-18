@@ -35,7 +35,10 @@ SET
       + COALESCE((SELECT max_node_id FROM corpus_stats WHERE id = :id),0),
  corpus_ref = corpus_ref + COALESCE((SELECT max_corpus_id FROM corpus_stats WHERE id = :id),0),
  toplevel_corpus = toplevel_corpus + COALESCE((SELECT max_corpus_id FROM corpus_stats WHERE id = :id),0);
-    
+
+
+DROP TABLE _nodeidmapping;    
+
 UPDATE _text SET corpus_ref = corpus_ref + COALESCE((SELECT max_corpus_id FROM corpus_stats WHERE id = :id),0);
     
 UPDATE _corpus
@@ -45,5 +48,3 @@ SET
  post = post + COALESCE((SELECT max_corpus_post FROM corpus_stats WHERE id = :id),0);
 
 UPDATE _corpus_annotation SET corpus_ref = corpus_ref + COALESCE((SELECT max_corpus_id FROM corpus_stats WHERE id = :id),0);
-
-DROP TABLE _nodeidmapping;
