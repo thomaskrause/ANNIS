@@ -643,10 +643,16 @@ public class DefaultAdministrationDao implements AdministrationDao
   void computeLevel()
   {
     log.info("computing values for rank.level (dominance and precedence)");
-    executeSqlFromScript("level.sql");
+    if (!executeSqlFromScript(dbLayout + "/level.sql"))
+    {
+      executeSqlFromScript("level.sql");
+    }
     
     log.info("computing values for rank.level (coverage)");
-    executeSqlFromScript("level_coverage.sql");
+    if (!executeSqlFromScript(dbLayout + "/level_coverage.sql"))
+    {
+      executeSqlFromScript("level_coverage.sql");
+    }
   }
   
   void computeCorpusStatistics(String path)

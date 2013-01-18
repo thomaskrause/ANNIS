@@ -1,5 +1,5 @@
 ALTER TABLE _component ADD COLUMN corpus_ref integer;
-UPDATE _component AS c SET corpus_ref = (SELECT corpus_ref FROM _rank WHERE component_ref = c.id LIMIT 1);
+UPDATE _component AS c SET corpus_ref = (SELECT DISTINCT corpus_ref FROM _rank WHERE component_ref = c.id);
 
 
 DROP TABLE IF EXISTS _componentid_min;
