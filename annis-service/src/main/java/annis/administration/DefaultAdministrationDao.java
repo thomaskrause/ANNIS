@@ -857,7 +857,10 @@ public class DefaultAdministrationDao implements AdministrationDao
   {
     MapSqlParameterSource args = makeArgs().addValue(":id", corpusID);
     log.info("creating annotations table for corpus with ID " + corpusID);
-    executeSqlFromScript("annotations.sql", args);
+    if(! executeSqlFromScript(dbLayout + "/annotations.sql", args))
+    {
+      executeSqlFromScript("annotations.sql", args);
+    }
     
     log.info("indexing annotations table for corpus with ID " + corpusID);
     executeSqlFromScript("indexes_annotations.sql", args);
