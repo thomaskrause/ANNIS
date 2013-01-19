@@ -139,8 +139,6 @@ CREATE TABLE corpus_stats
   max_corpus_id integer  NULL,
   max_corpus_pre integer NULL,
   max_corpus_post integer NULL,
-  max_component_id integer NULL,
-  max_node_id bigint NULL, 
   source_path varchar -- original path to the folder containing the relANNIS sources
 );
 

@@ -19,4 +19,4 @@ UPDATE _rank AS r SET
   component_ref = component_ref - (SELECT min_id FROM _componentid_min AS m WHERE r.corpus_ref = m.corpus_ref)
 ;
 
---DROP TABLE _componentid_min;
+DROP TABLE _componentid_min;

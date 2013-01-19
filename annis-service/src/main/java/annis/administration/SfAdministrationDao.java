@@ -32,6 +32,14 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   private static final Logger log = LoggerFactory.getLogger(AdministrationDao.class);
 
   @Override
+  void updateCorpusStatistic(long corpusID)
+  {
+    // do nothing
+  }
+
+  
+  
+  @Override
   protected void adjustIDs()
   {
     adjustRankPrePost();
