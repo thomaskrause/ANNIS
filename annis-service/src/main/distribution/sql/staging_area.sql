@@ -24,7 +24,8 @@ CREATE :tmp TABLE _corpus
 	version		varchar,				-- version number (not used)
 	pre			integer	NOT NULL,		-- pre and post order of the corpus tree
 	post		integer	NOT NULL
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- corpus annotations
 -- unique combinantion of corpus_ref, namespace and name
@@ -35,7 +36,8 @@ CREATE :tmp TABLE _corpus_annotation
 	namespace	varchar,
 	name		varchar NOT NULL,
 	value		varchar
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- source texts
 -- stores each source text in its entirety
@@ -44,7 +46,8 @@ CREATE :tmp TABLE _text
 	id 		integer NOT NULL,			-- primary key
 	name	varchar,					-- name (not used)
 	text 	text							-- text contents (not used)
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- nodes in the annotation graph
 -- nodes are named
@@ -66,7 +69,8 @@ CREATE :tmp TABLE _node
 	seg_right    integer,        -- most right segmentation index of covered token
 	continuous		boolean,				-- true if spanned text in _text.text is continuous (not used)
 	span			varchar			-- for tokens: substring in _text.text (indexed for text search), else: NULL
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- connected components of the annotation graph
 -- are of a type: Coverage, Dominance, Pointing relation or NULL for root nodes
@@ -77,7 +81,8 @@ CREATE :tmp TABLE _component
 	type		char(1),					-- edge type: c, d, P, NULL
 	namespace	varchar,				-- namespace (not used)
 	name		varchar
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- pre and post order of the annotation graph
 -- root nodes: parent IS NULL
@@ -89,7 +94,8 @@ CREATE :tmp TABLE _rank
 	node_ref		bigint	NOT NULL,	-- foreign key to _node.id
 	component_ref	integer NOT NULL,	-- foreign key to _component.id
 	parent			integer NULL		-- foreign key to _rank.pre, NULL for root nodes
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- node annotations
 -- unique combinantion of node_ref, namespace and name
@@ -99,7 +105,8 @@ CREATE :tmp TABLE _node_annotation
 	namespace	varchar,
 	name		varchar NOT NULL,
 	value		varchar
-);
+)
+WITH(autovacuum_enabled=false);
 
 
 -- edge annotations
@@ -110,7 +117,8 @@ CREATE :tmp TABLE _edge_annotation
 	namespace		varchar,
 	name			varchar NOT NULL,
 	value			varchar
-);
+)
+WITH(autovacuum_enabled=false);
 
 -- resolver visualization mappings
 -- this table is just a subset of resolver_vis_map. It contains all columns needed for copying data from relANNIS format
@@ -125,7 +133,8 @@ CREATE :tmp TABLE _resolver_vis_map
   "visibility"  varchar default 'hidden' NOT NULL,
   "order" integer default '0', -- the order of the layers, in which they shall be shown
   "mappings" varchar			    
-);
+)
+WITH(autovacuum_enabled=false);
 
 CREATE :tmp TABLE _media_files
 (
@@ -134,4 +143,5 @@ CREATE :tmp TABLE _media_files
   bytes bigint NOT NULL,
   mime_type varchar NOT NULL,
   title varchar NOT NULL  
-);
+)
+WITH(autovacuum_enabled=false);
