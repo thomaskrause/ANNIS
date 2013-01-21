@@ -37,14 +37,26 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     // do nothing
   }
 
+//  @Override
+//  void computeLevel()
+//  {
+//    // make sure to make the _rank table as small as possible
+//    log.info("shrinking _rank table");
+//    getJdbcTemplate().execute("VACUUM FULL " + tableInStagingArea("rank") +  ";");
+//    super.computeLevel();
+//  }
+  
+  
+
   @Override
   void computeLevel()
   {
     int level = 0;
     log.info("preparing level computation");    
     getJdbcTemplate().execute("ALTER TABLE _rank ADD COLUMN \"level\" integer;");
-    getJdbcTemplate().execute("CREATE INDEX idx__rank_cluster ON _rank(corpus_ref, component_ref, pre);");
-    getJdbcTemplate().execute("CLUSTER _rank USING idx__rank_cluster;");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("component") +  ";");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("rank") +  ";");
+
     
     log.info("computing level {}", level);
     
@@ -68,8 +80,6 @@ public class SfAdministrationDao extends DefaultAdministrationDao
         "  c.parent = p.pre AND\n" +
         "  c.\"level\" = ?;", level, level-1);
     }
-    
-    getJdbcTemplate().execute("DROP INDEX idx__rank_cluster;");
   }
 
   
@@ -105,38 +115,38 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   @Override
   void analyzeFacts(long corpusID)
   {
-    log.info("analyzing imported tables for corpus with ID " + corpusID);
+    log.info("analyzing and shrinking imported tables for corpus with ID " + corpusID);
     
     log.debug("analyzing node table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE node_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_" + corpusID);
 
     log.debug("analyzing node_annotation table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE node_annotation_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_annotation_" + corpusID);
     
     log.debug("analyzing edge_annotation table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE edge_annotation_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE edge_annotation_" + corpusID);
     
     log.debug("analyzing rank table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE rank_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE rank_" + corpusID);
 
     log.debug("analyzing component table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("ANALYZE component_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_" + corpusID);
     
     // general parent tables
     log.debug("analyzing general node table");
-    getJdbcTemplate().execute("ANALYZE node");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE node");
     
     log.debug("analyzing general node_annotation table");
-    getJdbcTemplate().execute("ANALYZE node_annotation");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_annotation");
     
     log.debug("analyzing general edge_annotation table");
-    getJdbcTemplate().execute("ANALYZE edge_annotation");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE edge_annotation");
     
     log.debug("analyzing general rank table");
-    getJdbcTemplate().execute("ANALYZE rank");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE rank");
 
     log.debug("analyzing general component table");
-    getJdbcTemplate().execute("ANALYZE component");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE component");
   }
 
   @Override

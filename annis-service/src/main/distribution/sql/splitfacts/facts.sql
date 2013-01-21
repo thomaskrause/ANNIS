@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS rank_:id;
 DROP TABLE IF EXISTS node_annotation_:id;
 DROP TABLE IF EXISTS edge_annotation_:id;
 
-CREATE TABLE node_:id (
+CREATE UNLOGGED TABLE node_:id (
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
   PRIMARY KEY(corpus_ref, id),
@@ -23,7 +23,7 @@ SELECT
 FROM _node;
 
 --
-CREATE TABLE node_annotation_:id (
+CREATE UNLOGGED TABLE node_annotation_:id (
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
   PRIMARY KEY(corpus_ref, node_ref, val_ns),
@@ -41,7 +41,7 @@ SELECT
 FROM _node_annotation;
 
 --
-CREATE TABLE component_:id (
+CREATE UNLOGGED TABLE component_:id (
   corpus_ref integer REFERENCES corpus (id),
   id integer,
   toplevel_corpus integer REFERENCES corpus(id),
@@ -55,7 +55,7 @@ SELECT corpus_ref, id, "type", "namespace", "name", :id
 FROM _component;
 
 --
-CREATE TABLE rank_:id (
+CREATE UNLOGGED TABLE rank_:id (
   corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
   component_ref integer,
@@ -74,7 +74,7 @@ SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref
 FROM _rank;
 
 --
-CREATE TABLE edge_annotation_:id (
+CREATE UNLOGGED TABLE edge_annotation_:id (
   rank_ref integer REFERENCES rank_:id(id),
   toplevel_corpus integer REFERENCES corpus(id),
   PRIMARY KEY (rank_ref, val_ns),

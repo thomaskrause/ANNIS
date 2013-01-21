@@ -296,7 +296,6 @@ public class DefaultAdministrationDao implements AdministrationDao
   
   
   @Override
-  @Transactional(readOnly = false)
   public void importCorpus(String path)
   {
     
@@ -367,7 +366,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   void createStagingArea(boolean useTemporary)
   {
     log.info("creating staging area");
-    MapSqlParameterSource args = makeArgs().addValue(":tmp", useTemporary ? "TEMPORARY" : "UNLOGGED");
+    MapSqlParameterSource args = makeArgs().addValue(":tmp", "UNLOGGED");
     executeSqlFromScript("staging_area.sql", args);
   }
   
@@ -487,7 +486,6 @@ public class DefaultAdministrationDao implements AdministrationDao
       }
     }
   }
-  
   private void bulkImportNode(String path)
   {
     try
@@ -513,8 +511,10 @@ public class DefaultAdministrationDao implements AdministrationDao
       {
         // old node table without segmentations
         // create temporary table for  bulk import
+        
+        jdbcTemplate.execute("DROP TABLE IF EXISTS _tmpnode");
         jdbcTemplate.execute(
-          "CREATE TEMPORARY TABLE _tmpnode"
+          "CREATE UNLOGGED TABLE _tmpnode"
           + "\n(\n"
           + "id bigint,\n"
           + "text_ref integer,\n"
@@ -539,6 +539,8 @@ public class DefaultAdministrationDao implements AdministrationDao
           + "NULL AS seg_name, NULL AS seg_left, NULL AS seg_right, "
           + "continuous, span\n"
           + "FROM _tmpnode");
+        
+        jdbcTemplate.execute("DROP TABLE _tmpnode");
       }
       else
       {
