@@ -367,8 +367,7 @@ public class DefaultAdministrationDao implements AdministrationDao
   void createStagingArea(boolean useTemporary)
   {
     log.info("creating staging area");
-    // always use non-temporary tables on import (but drop them later if requested)
-    MapSqlParameterSource args = makeArgs().addValue(":tmp", "UNLOGGED");
+    MapSqlParameterSource args = makeArgs().addValue(":tmp", useTemporary ? "TEMPORARY" : "UNLOGGED");
     executeSqlFromScript("staging_area.sql", args);
   }
   
@@ -1106,7 +1105,6 @@ public class DefaultAdministrationDao implements AdministrationDao
 
   // executes an SQL script from $ANNIS_HOME/scripts, substituting the parameters found in args
   @Override
-  @Transactional(readOnly=false)
   public boolean executeSqlFromScript(String script, MapSqlParameterSource args)
   {
     File fScript = new File(scriptPath, script);

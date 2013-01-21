@@ -38,13 +38,15 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   }
 
   @Override
-  @Transactional(readOnly=false)
   void computeLevel()
   {
     int level = 0;
-    log.info("computing level {}", level);
-    
+    log.info("preparing level computation");    
     getJdbcTemplate().execute("ALTER TABLE _rank ADD COLUMN \"level\" integer;");
+    getJdbcTemplate().execute("CREATE INDEX idx__rank_cluster ON _rank(corpus_ref, component_ref, pre);");
+    getJdbcTemplate().execute("CLUSTER _rank USING idx__rank_cluster;");
+    
+    log.info("computing level {}", level);
     
     int rows = getJdbcTemplate().update(
       "UPDATE _rank SET \"level\" = 0\n" +
@@ -66,6 +68,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
         "  c.parent = p.pre AND\n" +
         "  c.\"level\" = ?;", level, level-1);
     }
+    
+    getJdbcTemplate().execute("DROP INDEX idx__rank_cluster;");
   }
 
   
