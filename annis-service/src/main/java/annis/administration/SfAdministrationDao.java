@@ -94,7 +94,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   }
   
   protected void adjustComponentId()
-  { 
+  {     
     log.info("adjusting component id");
     executeSqlFromScript("adjustcomponentid.sql");
     log.debug("analyzing _component and _rank");
@@ -129,8 +129,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.debug("analyzing rank table for corpus with ID " + corpusID);
     getJdbcTemplate().execute("VACUUM FULL ANALYZE rank_" + corpusID);
 
-    log.debug("analyzing component table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_" + corpusID);
+    log.debug("analyzing component_type table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type_" + corpusID);
     
     // general parent tables
     log.debug("analyzing general node table");
@@ -145,8 +145,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.debug("analyzing general rank table");
     getJdbcTemplate().execute("VACUUM FULL ANALYZE rank");
 
-    log.debug("analyzing general component table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE component");
+    log.debug("analyzing general component_type table");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type");
   }
 
   @Override
@@ -161,7 +161,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
       getJdbcTemplate().execute("DROP TABLE IF EXISTS edge_annotation_" + l);
       getJdbcTemplate().execute("DROP TABLE IF EXISTS node_annotation_" + l);
       getJdbcTemplate().execute("DROP TABLE IF EXISTS rank_" + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS component_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS component_type_" + l);
       getJdbcTemplate().execute("DROP TABLE IF EXISTS node_" + l);
     }
     

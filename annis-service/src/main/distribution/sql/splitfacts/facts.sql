@@ -1,6 +1,6 @@
 --- :id is replaced by code
 DROP TABLE IF EXISTS node_:id;
-DROP TABLE IF EXISTS component_:id;
+DROP TABLE IF EXISTS component_type_:id;
 DROP TABLE IF EXISTS rank_:id;
 DROP TABLE IF EXISTS node_annotation_:id;
 DROP TABLE IF EXISTS edge_annotation_:id;
@@ -41,36 +41,35 @@ SELECT
 FROM _node_annotation;
 
 --
-CREATE UNLOGGED TABLE component_:id (
-  corpus_ref integer REFERENCES corpus (id),
-  id integer,
+CREATE TABLE component_type_:id
+(
+  id integer PRIMARY KEY,
   toplevel_corpus integer REFERENCES corpus(id),
-
-  PRIMARY KEY(corpus_ref, id),
+  UNIQUE("type", namespace, "name"),
   CHECK(toplevel_corpus = :id)
-) INHERITS(component);
+) INHERITS(component_type);
 
-INSERT INTO component_:id (corpus_ref, id, "type", "namespace", "name", toplevel_corpus)
-SELECT corpus_ref, id, "type", "namespace", "name", :id
-FROM _component;
+INSERT INTO component_type_:id(id, "type", namespace, "name", toplevel_corpus)
+SELECT id, "type", namespace, "name", :id
+FROM _component_type;
 
 --
 CREATE UNLOGGED TABLE rank_:id (
   corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
   component_ref integer,
+  type_ref integer REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
 
   CHECK(toplevel_corpus = :id),
 
-  UNIQUE (corpus_ref, component_ref, pre, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id),
-  FOREIGN KEY (corpus_ref, component_ref) REFERENCES component_:id(corpus_ref, id)
+  UNIQUE (corpus_ref, component_ref, pre, type_ref, toplevel_corpus),
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id)
 ) INHERITS(rank);
 
 INSERT INTO rank_:id (corpus_ref, node_ref, id, pre, post, parent, root, "level", 
-  component_ref, toplevel_corpus)
-SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref, :id
+  component_ref, type_ref, toplevel_corpus)
+SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref, type_ref, :id
 FROM _rank;
 
 --

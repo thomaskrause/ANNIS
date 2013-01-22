@@ -16,16 +16,12 @@ ALTER TABLE _text ADD CONSTRAINT "_PK__text" PRIMARY KEY (corpus_ref, id);
 ALTER TABLE _node ADD CONSTRAINT "_PK__node" PRIMARY KEY (corpus_ref, id);
 ALTER TABLE _node ADD CONSTRAINT "_FK__node__corpus" FOREIGN KEY (corpus_ref) REFERENCES _corpus (id);
 
--- _component
-ALTER TABLE _component ADD CONSTRAINT "__PK_component" PRIMARY KEY (corpus_ref, id);
-
 -- _rank
 ALTER TABLE _rank ADD CONSTRAINT "_PK__rank" PRIMARY KEY (id);
-ALTER TABLE _rank ADD CONSTRAINT "_UNIQ__rank_pre" UNIQUE (pre, component_ref, corpus_ref);
-ALTER TABLE _rank ADD CONSTRAINT "_UNIQ__rank_post" UNIQUE (post, component_ref, corpus_ref);
+ALTER TABLE _rank ADD CONSTRAINT "_UNIQ__rank_pre" UNIQUE (pre, component_ref, type_ref, corpus_ref);
+ALTER TABLE _rank ADD CONSTRAINT "_UNIQ__rank_post" UNIQUE (post, component_ref, type_ref, corpus_ref);
 ALTER TABLE _rank ADD CONSTRAINT "_FK__rank__corpus" FOREIGN KEY (corpus_ref) REFERENCES _corpus (id);
 ALTER TABLE _rank ADD CONSTRAINT "_FK__rank__node" FOREIGN KEY (corpus_ref, node_ref) REFERENCES _node (corpus_ref, id);
-ALTER TABLE _rank ADD CONSTRAINT "_FK__rank__component" FOREIGN KEY (corpus_ref, component_ref) REFERENCES _component (corpus_ref, id);
 
 ALTER TABLE _node_annotation ADD CONSTRAINT "__UNIQ_node_annotation" UNIQUE (corpus_ref, node_ref, namespace, name);
 ALTER TABLE _node_annotation ADD CONSTRAINT "__FK_node_annotation__node" FOREIGN KEY (corpus_ref, node_ref) REFERENCES _node (corpus_ref, id);

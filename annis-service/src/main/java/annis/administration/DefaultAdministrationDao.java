@@ -104,7 +104,8 @@ public class DefaultAdministrationDao implements AdministrationDao
   private String[] createdTables =
   {
     "corpus_stats",
-    "media_files"
+    "media_files",
+    "component_type"
   };
   private String dbLayout;
   

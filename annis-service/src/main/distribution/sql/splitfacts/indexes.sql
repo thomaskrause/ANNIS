@@ -79,11 +79,6 @@ CREATE INDEX idx__node_text_ref_index__:id
   USING btree
   (text_ref);
 
--- component
-CREATE INDEX idx__component_dominance__:id ON component_:id ("name", id) WHERE type='d';
-CREATE INDEX idx__component_precedence__:id ON component_:id ("name", id) WHERE type='p'; 
-CREATE INDEX idx__component_coverage__:id ON component_:id ("name", id) WHERE type='c';
-
 -- rank
 
 CREATE INDEX idx__rank_level__:id
@@ -119,6 +114,11 @@ CREATE INDEX idx__rank_root__:id
   ON rank_:id
   USING btree
   (root, node_ref);
+
+CREATE INDEX idx__rank_component__:id
+  ON rank_:id
+  USING btree
+  (component_ref, type_ref, node_ref);
 
 -- node_annotation
 CREATE INDEX idx__node_annotation_val__:id

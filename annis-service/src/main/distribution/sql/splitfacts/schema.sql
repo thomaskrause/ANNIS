@@ -83,14 +83,14 @@ CREATE TABLE node_annotation
   FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
 );
 
-CREATE TABLE component (
-  corpus_ref integer REFERENCES corpus(id),
-  id integer,
-  "type" character(1), -- edge type of this component
-  namespace varchar, -- optional namespace of the edges’ names
-  "name" varchar, -- name of the edges in this component
-  PRIMARY KEY(corpus_ref, id),
-  toplevel_corpus integer REFERENCES corpus(id)
+CREATE TABLE component_type
+(
+  id integer PRIMARY KEY,
+  "type" char(1),
+  namespace varchar,
+  "name" varchar,
+  toplevel_corpus integer REFERENCES corpus(id),
+  UNIQUE("type", namespace, "name")
 );
 
 CREATE TABLE rank (
@@ -103,10 +103,10 @@ CREATE TABLE rank (
   root boolean,
   "level" integer,
   component_ref integer, -- component id
+  type_ref integer REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
   UNIQUE (component_ref, pre, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id),
-  FOREIGN KEY (corpus_ref, component_ref) REFERENCES component(corpus_ref, id)
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
 );
 
 CREATE TABLE edge_annotation
