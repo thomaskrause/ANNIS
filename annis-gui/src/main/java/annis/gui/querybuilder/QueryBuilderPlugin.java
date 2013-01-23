@@ -23,8 +23,9 @@ import java.io.Serializable;
 import net.xeoh.plugins.base.Plugin;
 
 /**
- * Every query builder must implement this interface. It' s also necessary to to
- * load this plugin by hand in {@link MainApp#initPlugins()}
+ * Every query builder must implement this interface. 
+ * It' s also necessary to to
+ * load this plugin by hand in {@link MainApp::initPlugins()}
  *
  * @author Thomas Krause <b.pixeldrama@gmail.com>
  */

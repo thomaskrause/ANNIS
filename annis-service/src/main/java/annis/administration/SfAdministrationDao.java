@@ -90,6 +90,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     adjustRankPrePost();
     adjustTextId();
     adjustNodeId();
+//    if(true) return;
     adjustComponentId();
   }
   

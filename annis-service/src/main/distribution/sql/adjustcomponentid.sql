@@ -27,8 +27,15 @@ UPDATE _component AS c SET corpus_ref = (SELECT DISTINCT corpus_ref FROM _rank W
       c."type" IS NOT DISTINCT FROM t."type" AND 
       c."namespace" IS NOT DISTINCT FROM t."namespace" AND
       c."name" IS NOT DISTINCT FROM t."name"
-    LIMIT 1
  );
+
+UPDATE _rank AS r SET
+  type_ref = (
+    SELECT type_ref 
+    FROM _component AS c 
+    WHERE 
+      r.component_ref = c.id
+);
 
 
 DROP TABLE IF EXISTS _componentid_mapping;

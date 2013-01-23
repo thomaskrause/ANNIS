@@ -1,12 +1,7 @@
 ﻿
 -- no node duplication
 
--- "harmless"  cat="S" & /d.*/ & /(e|f|h).*/ & #1 >* #2 & #1 >* #3 & #2 .1,4 #3 query
-
---CREATE INDEX testidx__node_span__1971 ON node_1971 USING btree  (span varchar_pattern_ops, corpus_ref, id);
---analyze node_2181
-
---alter table rank_1971ADD CONSTRAINT "prepost" CHECK(pre < post);
+-- "harmless"  cat="S" & /d.*/ & /(e|f|h).*/ & #1 >* #2 & #1 >* #3 & #2 .1,40 #3 query
 
 SELECT 
   count(*)
@@ -40,15 +35,15 @@ FROM
     rank1.component_ref = rank3.component_ref AND rank1.corpus_ref = rank3.corpus_ref AND
     rank1.component_ref = rank2.component_ref AND rank1.corpus_ref = rank2.corpus_ref AND
 
-    rank2.pre BETWEEN rank1.pre AND rank1.post AND
-    rank3.pre BETWEEN rank1.pre AND rank1.post AND
-    
-    --rank1.pre < rank3.pre AND
-    --rank1.pre < rank2.pre AND
+    rank1.pre < rank3.pre AND
+    rank1.pre < rank2.pre AND
+
+    rank1.type_ref = 4 AND
     rank2.type_ref = 4 AND
     rank3.type_ref = 4 AND
-    --rank3.pre < rank1.post AND
-    --rank2.pre < rank1.post AND    
+    
+    rank3.pre < rank1.post AND
+    rank2.pre < rank1.post AND    
     node1.corpus_ref = node2.corpus_ref AND
     node1.corpus_ref = node3.corpus_ref AND
     node_annotation1.val = 'cat:S' AND

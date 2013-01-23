@@ -316,6 +316,8 @@ public class DefaultAdministrationDao implements AdministrationDao
 //    if (true) return;
 
     adjustIDs();
+//    if(true) return;
+    
     long corpusID = updateIds();
     
     importBinaryData(path);
@@ -832,7 +834,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     
     for (String table : tables)
     {
-      jdbcTemplate.execute("DROP TABLE " + tableInStagingArea(table));
+      jdbcTemplate.execute("DROP TABLE " + tableInStagingArea(table) + " CASCADE");
     }
     
   }
@@ -1016,8 +1018,8 @@ public class DefaultAdministrationDao implements AdministrationDao
   private List<String> importedAndCreatedTables()
   {
     List<String> tables = new ArrayList<String>();
-    tables.addAll(Arrays.asList(importedTables));
     tables.addAll(Arrays.asList(createdTables));
+    tables.addAll(Arrays.asList(importedTables));
     return tables;
   }
   

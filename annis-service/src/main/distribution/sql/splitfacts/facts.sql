@@ -58,7 +58,7 @@ CREATE UNLOGGED TABLE rank_:id (
   corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
   component_ref integer,
-  type_ref integer REFERENCES component_type(id),
+  type_ref integer REFERENCES component_type_:id (id),
   toplevel_corpus integer REFERENCES corpus(id),
 
   CHECK(toplevel_corpus = :id),

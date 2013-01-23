@@ -53,7 +53,8 @@ public class FilesystemCache implements Cache
     return file;
   }
 
-  /* (non-Javadoc)
+  /**
+   * (non-Javadoc)
    * @see annis.cache.Cache#get(java.lang.String)
    */
   public String get(String key) throws CacheException
