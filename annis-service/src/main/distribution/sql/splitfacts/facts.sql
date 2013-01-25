@@ -1,14 +1,25 @@
 --- :id is replaced by code
-DROP TABLE IF EXISTS node_:id;
-DROP TABLE IF EXISTS component_type_:id;
-DROP TABLE IF EXISTS rank_:id;
-DROP TABLE IF EXISTS node_annotation_:id;
-DROP TABLE IF EXISTS edge_annotation_:id;
+DROP TABLE IF EXISTS node_:id CASCADE;
+DROP TABLE IF EXISTS component_type_:id CASCADE;
+DROP TABLE IF EXISTS rank_:id CASCADE;
+DROP TABLE IF EXISTS node_annotation_:id CASCADE;
+DROP TABLE IF EXISTS edge_annotation_:id CASCADE;
+DROP TABLE IF EXISTS text_:id CASCADE;
+
+CREATE UNLOGGED TABLE text_:id (
+  id    integer PRIMARY KEY,
+  toplevel_corpus integer REFERENCES corpus(id),
+  CHECK(toplevel_corpus = :id)
+) INHERITS(text);
+
+INSERT INTO text_:id (id, "name", text, toplevel_corpus)
+SELECT id, "name", text, :id FROM _text;
 
 CREATE UNLOGGED TABLE node_:id (
+  text_ref integer REFERENCES text_:id(id),
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY(corpus_ref, id),
+  PRIMARY KEY(id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(node);
 
@@ -24,16 +35,14 @@ FROM _node;
 
 --
 CREATE UNLOGGED TABLE node_annotation_:id (
-  corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY(corpus_ref, node_ref, val_ns),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id),
+  PRIMARY KEY(node_ref, val_ns),
+  FOREIGN KEY (node_ref) REFERENCES node_:id(id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(node_annotation);
 
-INSERT INTO node_annotation_:id(corpus_ref, node_ref, val_ns, val, toplevel_corpus)
+INSERT INTO node_annotation_:id(node_ref, val_ns, val, toplevel_corpus)
 SELECT 
-  corpus_ref,
   node_ref, 
   namespace || ':' || "name" || ':' || "value",
   "name" || ':' || "value",
@@ -55,7 +64,6 @@ FROM _component_type;
 
 --
 CREATE UNLOGGED TABLE rank_:id (
-  corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
   component_ref integer,
   type_ref integer REFERENCES component_type_:id (id),
@@ -63,13 +71,15 @@ CREATE UNLOGGED TABLE rank_:id (
 
   CHECK(toplevel_corpus = :id),
 
-  UNIQUE (corpus_ref, component_ref, pre, type_ref, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id)
+  UNIQUE (component_ref, pre),
+  UNIQUE (component_ref, post),
+  UNIQUE (component_ref, pre, post),
+  FOREIGN KEY (node_ref) REFERENCES node_:id(id)
 ) INHERITS(rank);
 
-INSERT INTO rank_:id (corpus_ref, node_ref, id, pre, post, parent, root, "level", 
+INSERT INTO rank_:id (node_ref, id, pre, post, parent, root, "level", 
   component_ref, type_ref, toplevel_corpus)
-SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", component_ref, type_ref, :id
+SELECT node_ref, id, pre, post, parent, root, "level", component_ref, type_ref, :id
 FROM _rank;
 
 --

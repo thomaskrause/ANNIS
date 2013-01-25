@@ -39,12 +39,11 @@ COMMENT ON COLUMN corpus_annotation.value IS 'annotation value';
 
 CREATE TABLE text
 (
-  corpus_ref integer REFERENCES corpus(id), 
   id    integer,
   name  varchar,
   text  text,
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY(corpus_ref, id)
+  PRIMARY KEY(id)
 );
 
 COMMENT ON COLUMN text.id IS 'primary key';
@@ -52,8 +51,8 @@ COMMENT ON COLUMN text.name IS 'informational name of the primary data text';
 COMMENT ON COLUMN text.text IS 'raw text data';
 
 CREATE TABLE node (
-  id integer,
-  text_ref integer,
+  id integer PRIMARY KEY,
+  text_ref integer REFERENCES text(id),
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
   "namespace" varchar,
@@ -67,20 +66,17 @@ CREATE TABLE node (
   left_token integer,
   right_token integer,
   seg_name varchar,
-  seg_index integer,
-  PRIMARY KEY (corpus_ref, id),
-  FOREIGN KEY (corpus_ref, text_ref) REFERENCES text(corpus_ref, id)
+  seg_index integer
 );
 
 CREATE TABLE node_annotation
 (
-  corpus_ref integer REFERENCES corpus(id),
-	node_ref 				integer,
+  node_ref 				integer,
 	val_ns          varchar, 
 	val             varchar,
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY (corpus_ref, node_ref, val_ns),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
+  PRIMARY KEY (node_ref, val_ns),
+  FOREIGN KEY (node_ref) REFERENCES node(id)
 );
 
 CREATE TABLE component_type
@@ -94,7 +90,6 @@ CREATE TABLE component_type
 );
 
 CREATE TABLE rank (
-  corpus_ref integer REFERENCES corpus(id),
   node_ref integer, -- node reference
   id integer PRIMARY KEY,
   pre integer NOT NULL, -- pre-order value
@@ -106,7 +101,7 @@ CREATE TABLE rank (
   type_ref integer REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
   UNIQUE (component_ref, pre, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
+  FOREIGN KEY (node_ref) REFERENCES node(id)
 );
 
 CREATE TABLE edge_annotation

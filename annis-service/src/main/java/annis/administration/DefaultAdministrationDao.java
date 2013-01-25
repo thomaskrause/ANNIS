@@ -95,7 +95,6 @@ public class DefaultAdministrationDao implements AdministrationDao
   private String[] tablesToCopyManually =
   {
     "corpus", "corpus_annotation",
-    "text",
     FILE_RESOLVER_VIS_MAP,
     "corpus_stats",
     "media_files"

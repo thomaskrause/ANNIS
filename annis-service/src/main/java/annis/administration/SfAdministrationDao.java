@@ -19,7 +19,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -65,7 +64,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
       "WHERE pre + 1 = post;");
     
     getJdbcTemplate().execute(
-      "CREATE INDEX testidx__rank_level ON _rank(corpus_ref, component_ref, \"level\");");
+      "CREATE INDEX testidx__rank_level ON _rank(component_ref, \"level\");");
     
     while(rows > 0)
     {
@@ -75,7 +74,6 @@ public class SfAdministrationDao extends DefaultAdministrationDao
         "UPDATE _rank AS p SET \"level\" = ?\n" +
         "FROM _rank AS c\n" +
         "WHERE\n" +
-        "  c.corpus_ref = p.corpus_ref AND\n" +
         "  c.component_ref = p.component_ref AND\n" +
         "  c.parent = p.pre AND\n" +
         "  c.\"level\" = ?;", level, level-1);
@@ -88,10 +86,21 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   protected void adjustIDs()
   {
     adjustRankPrePost();
-    adjustTextId();
-    adjustNodeId();
+    addComponentType();
+    
+//    adjustTextId();
+//    adjustNodeId();
 //    if(true) return;
-    adjustComponentId();
+//    adjustComponentId();
+  }
+  
+  protected void addComponentType()
+  {
+    log.info("adding component type");
+    if(!executeSqlFromScript(getDbLayout() + "/rank_component_type.sql"))
+    {
+      executeSqlFromScript("rank_component_type.sql");
+    }
   }
   
   protected void adjustComponentId()
