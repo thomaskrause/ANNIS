@@ -86,6 +86,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   protected void adjustIDs()
   {
     adjustRankPrePost();
+    adjustTextId();
     addComponentType();
     
 //    adjustTextId();

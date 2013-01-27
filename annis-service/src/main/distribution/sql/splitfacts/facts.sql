@@ -7,19 +7,20 @@ DROP TABLE IF EXISTS edge_annotation_:id CASCADE;
 DROP TABLE IF EXISTS text_:id CASCADE;
 
 CREATE UNLOGGED TABLE text_:id (
-  id    integer PRIMARY KEY,
+  corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
+  PRIMARY KEY (corpus_ref, id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(text);
 
-INSERT INTO text_:id (id, "name", text, toplevel_corpus)
-SELECT id, "name", text, :id FROM _text;
+INSERT INTO text_:id (corpus_ref, id, "name", text, toplevel_corpus)
+SELECT corpus_ref, id, "name", text, :id FROM _text;
 
 CREATE UNLOGGED TABLE node_:id (
-  text_ref integer REFERENCES text_:id(id),
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
   PRIMARY KEY(id),
+  FOREIGN KEY (corpus_ref, text_ref) REFERENCES text_:id (corpus_ref, id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(node);
 
@@ -64,16 +65,15 @@ FROM _component_type;
 
 --
 CREATE UNLOGGED TABLE rank_:id (
+  corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
-  component_ref integer,
   type_ref integer REFERENCES component_type_:id (id),
   toplevel_corpus integer REFERENCES corpus(id),
 
   CHECK(toplevel_corpus = :id),
 
-  UNIQUE (component_ref, pre),
-  UNIQUE (component_ref, post),
-  UNIQUE (component_ref, pre, post),
+  UNIQUE (corpus_ref, pre),
+  UNIQUE (corpus_ref, post),
   FOREIGN KEY (node_ref) REFERENCES node_:id(id)
 ) INHERITS(rank);
 
