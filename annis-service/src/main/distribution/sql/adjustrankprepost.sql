@@ -1,6 +1,3 @@
-ALTER TABLE _rank ADD COLUMN corpus_ref INTEGER;
-UPDATE _rank AS r SET corpus_ref = (SELECT n.corpus_ref FROM _node AS n WHERE n.id = r.node_ref);
-
 ALTER TABLE _rank RENAME pre TO id;
 ALTER TABLE _rank ADD pre integer;
 
@@ -11,7 +8,7 @@ CREATE UNLOGGED TABLE _premin (
 );
 
 INSERT INTO _premin(corpus_ref, minpre)
-SELECT corpus_ref, min(id) as minpre FROM _rank GROUP BY corpus_ref;
+SELECT component_ref, min(id) as minpre FROM _rank GROUP BY component_ref;
 
 UPDATE _rank AS r SET 
   pre = id - (SELECT minpre FROM _premin AS m WHERE r.corpus_ref = m.corpus_ref),

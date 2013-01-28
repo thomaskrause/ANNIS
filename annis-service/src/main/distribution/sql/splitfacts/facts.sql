@@ -19,7 +19,7 @@ SELECT corpus_ref, id, "name", text, :id FROM _text;
 CREATE UNLOGGED TABLE node_:id (
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY(id),
+  PRIMARY KEY(corpus_ref, id),
   FOREIGN KEY (corpus_ref, text_ref) REFERENCES text_:id (corpus_ref, id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(node);
@@ -37,14 +37,14 @@ FROM _node;
 --
 CREATE UNLOGGED TABLE node_annotation_:id (
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY(node_ref, val_ns),
-  FOREIGN KEY (node_ref) REFERENCES node_:id(id),
+  PRIMARY KEY(corpus_ref, node_ref, val_ns),
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(node_annotation);
 
-INSERT INTO node_annotation_:id(node_ref, val_ns, val, toplevel_corpus)
+INSERT INTO node_annotation_:id(corpus_ref, node_ref, val_ns, val, toplevel_corpus)
 SELECT 
-  node_ref, 
+  corpus_ref, node_ref, 
   namespace || ':' || "name" || ':' || "value",
   "name" || ':' || "value",
   :id
@@ -74,12 +74,12 @@ CREATE UNLOGGED TABLE rank_:id (
 
   UNIQUE (corpus_ref, pre),
   UNIQUE (corpus_ref, post),
-  FOREIGN KEY (node_ref) REFERENCES node_:id(id)
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node_:id(corpus_ref, id)
 ) INHERITS(rank);
 
-INSERT INTO rank_:id (node_ref, id, pre, post, parent, root, "level", 
+INSERT INTO rank_:id (corpus_ref, node_ref, id, pre, post, parent, root, "level", 
   type_ref, toplevel_corpus)
-SELECT node_ref, id, pre, post, parent, root, "level", type_ref, :id
+SELECT corpus_ref, node_ref, id, pre, post, parent, root, "level", type_ref, :id
 FROM _rank;
 
 --

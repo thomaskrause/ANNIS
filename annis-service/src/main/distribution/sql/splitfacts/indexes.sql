@@ -84,52 +84,57 @@ CREATE INDEX idx__node_text_ref_index__:id
 CREATE INDEX idx__rank_level__:id
   ON rank_:id
   USING btree
-  ("level", node_ref);
+  ("level", node_ref, corpus_ref);
 
 
 CREATE INDEX idx__rank_node_ref__:id
   ON rank_:id
   USING btree
-  (node_ref);
+  (node_ref, corpus_ref);
 
 
 CREATE INDEX idx__rank_parent__:id
   ON rank_:id
   USING btree
-  (parent, node_ref);
+  (parent, node_ref, corpus_ref);
 
 
 CREATE INDEX idx__rank_post__:id
   ON rank_:id
   USING btree
-  (post, node_ref);
+  (post, node_ref, corpus_ref);
 
 
 CREATE INDEX idx__rank_pre__:id
   ON rank_:id
   USING btree
-  (pre, node_ref);
+  (pre, node_ref, corpus_ref);
+
+CREATE INDEX idx__rank_pre_post__:id
+  ON rank_:id
+  USING btree
+  (pre, post, node_ref, corpus_ref);
 
 CREATE INDEX idx__rank_root__:id
   ON rank_:id
   USING btree
-  (root, node_ref);
+  (root, node_ref, corpus_ref);
 
 CREATE INDEX idx__rank_component__:id
   ON rank_:id
   USING btree
-  (type_ref, node_ref);
+  (type_ref, node_ref, corpus_ref);
 
 -- node_annotation
 CREATE INDEX idx__node_annotation_val__:id
   ON node_annotation_:id
   USING btree
-  (val varchar_pattern_ops, node_ref);
+  (val varchar_pattern_ops, node_ref, corpus_ref);
 
 CREATE INDEX idx__node_annotation_val_ns__:id
   ON node_annotation_:id
   USING btree
-  (val_ns varchar_pattern_ops, node_ref);
+  (val_ns varchar_pattern_ops, node_ref, corpus_ref);
 
 -- edge_annotation
 CREATE INDEX idx__edge_annotation_val__:id

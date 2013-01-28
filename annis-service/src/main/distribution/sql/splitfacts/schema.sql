@@ -52,7 +52,7 @@ COMMENT ON COLUMN text.name IS 'informational name of the primary data text';
 COMMENT ON COLUMN text.text IS 'raw text data';
 
 CREATE TABLE node (
-  id integer PRIMARY KEY,
+  id integer,
   text_ref integer,
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
@@ -68,17 +68,19 @@ CREATE TABLE node (
   right_token integer,
   seg_name varchar,
   seg_index integer,
+  PRIMARY KEY (corpus_ref, id),
   FOREIGN KEY (corpus_ref, text_ref) REFERENCES text(corpus_ref, id)
 );
 
 CREATE TABLE node_annotation
 (
+  corpus_ref      integer,
   node_ref 				integer,
 	val_ns          varchar, 
 	val             varchar,
   toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY (node_ref, val_ns),
-  FOREIGN KEY (node_ref) REFERENCES node(id)
+  PRIMARY KEY (corpus_ref, node_ref, val_ns),
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
 );
 
 CREATE TABLE component_type
@@ -103,7 +105,7 @@ CREATE TABLE rank (
   type_ref smallint REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
   UNIQUE (corpus_ref, pre, toplevel_corpus),
-  FOREIGN KEY (node_ref) REFERENCES node(id)
+  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
 );
 
 CREATE TABLE edge_annotation
