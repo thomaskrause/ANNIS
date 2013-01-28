@@ -150,5 +150,9 @@ CREATE INDEX idx__edge_annotation_val_ns__:id
 ----- 2nd query
 CREATE INDEX idx__2nd_query_:id ON node_:id (text_ref,left_token, right_token);
 
+-- new experimental stuff
+CREATE INDEX new__node_span_corpus_ref_id2__:id ON node_:id(id, corpus_ref, span varchar_pattern_ops);
+CREATE INDEX new__rank_node_ref__:id ON rank_:id(node_ref, corpus_ref) WHERE type_ref=4;
+CREATE INDEX new__rank_node_ref_all__:id ON rank_:id(node_ref, corpus_ref);
 
 END; -- transaction

@@ -1,7 +1,22 @@
-﻿
+﻿--set enable_mergejoin=true;
+--set enable_hashjoin=true;
 -- no node duplication
 
 -- "harmless"  cat="S" & /d.*/ & /(e|f|h).*/ & #1 >* #2 & #1 >* #3 & #2 .1,40 #3 query
+
+--set effective_cache_size=500;
+--set cpu_tuple_cost=0.01;
+--set cpu_operator_cost=0.2;
+
+--set enable_material=true;
+--set enable_mergejoin=true;
+--set enable_hashjoin=true;
+--set constraint_exclusion=partition;
+
+--CREATE INDEX new__rank_node_ref__2181 ON rank_2181(node_ref, corpus_ref) WHERE type_ref=4;
+--CREATE INDEX new__rank_node_ref_all__2181 ON rank_2181(node_ref, corpus_ref);
+
+--CREATE INDEX new__rank_pre_post__2181 ON rank_2181 (post, pre, corpus_ref);
 
 SELECT 
   count(*)
@@ -33,6 +48,7 @@ FROM
     -- real restrictions
     rank1.corpus_ref = rank3.corpus_ref AND
     rank1.corpus_ref = rank2.corpus_ref AND
+    node2.corpus_ref = node3.corpus_ref AND
 
     rank1.pre < rank3.pre AND
     rank3.pre < rank1.post AND

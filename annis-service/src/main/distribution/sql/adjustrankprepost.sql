@@ -8,7 +8,7 @@ CREATE UNLOGGED TABLE _premin (
 );
 
 INSERT INTO _premin(corpus_ref, minpre)
-SELECT component_ref, min(id) as minpre FROM _rank GROUP BY component_ref;
+SELECT corpus_ref, min(id) as minpre FROM _rank GROUP BY corpus_ref;
 
 UPDATE _rank AS r SET 
   pre = id - (SELECT minpre FROM _premin AS m WHERE r.corpus_ref = m.corpus_ref),
