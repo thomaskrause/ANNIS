@@ -53,7 +53,7 @@ FROM _node_annotation;
 --
 CREATE TABLE component_type_:id
 (
-  id integer PRIMARY KEY,
+  id smallint PRIMARY KEY,
   toplevel_corpus integer REFERENCES corpus(id),
   UNIQUE("type", namespace, "name"),
   CHECK(toplevel_corpus = :id)
@@ -67,7 +67,7 @@ FROM _component_type;
 CREATE UNLOGGED TABLE rank_:id (
   corpus_ref integer REFERENCES corpus(id),
   id integer PRIMARY KEY,
-  type_ref integer REFERENCES component_type_:id (id),
+  type_ref smallint REFERENCES component_type_:id (id),
   toplevel_corpus integer REFERENCES corpus(id),
 
   CHECK(toplevel_corpus = :id),
@@ -78,8 +78,8 @@ CREATE UNLOGGED TABLE rank_:id (
 ) INHERITS(rank);
 
 INSERT INTO rank_:id (node_ref, id, pre, post, parent, root, "level", 
-  component_ref, type_ref, toplevel_corpus)
-SELECT node_ref, id, pre, post, parent, root, "level", component_ref, type_ref, :id
+  type_ref, toplevel_corpus)
+SELECT node_ref, id, pre, post, parent, root, "level", type_ref, :id
 FROM _rank;
 
 --

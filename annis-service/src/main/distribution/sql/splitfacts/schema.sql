@@ -102,7 +102,7 @@ CREATE TABLE rank (
   "level" smallint,
   type_ref smallint REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  UNIQUE (component_ref, pre, toplevel_corpus),
+  UNIQUE (corpus_ref, pre, toplevel_corpus),
   FOREIGN KEY (node_ref) REFERENCES node(id)
 );
 

@@ -118,7 +118,7 @@ CREATE INDEX idx__rank_root__:id
 CREATE INDEX idx__rank_component__:id
   ON rank_:id
   USING btree
-  (component_ref, type_ref, node_ref);
+  (type_ref, node_ref);
 
 -- node_annotation
 CREATE INDEX idx__node_annotation_val__:id
