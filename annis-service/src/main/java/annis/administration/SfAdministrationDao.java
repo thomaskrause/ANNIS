@@ -19,6 +19,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 
 /**
@@ -80,6 +81,24 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     }
   }
 
+  @Override
+  protected void createFacts(long corpusID)
+  {
+    super.createFacts(corpusID);
+    
+    // query for all component types
+    List<Short> types = 
+      getJdbcTemplate().queryForList("SELECT id FROM component_type_" + corpusID, Short.class);
+    
+    for(short t : types)
+    {
+      log.info("indexing the new rank table for type {} (corpus with ID {})", t, corpusID);
+      MapSqlParameterSource args = makeArgs().addValue(":id", corpusID).addValue(":type", t);    
+      executeSqlFromScript(getDbLayout() + "/indexes_rank.sql", args);    
+    }
+  }
+
+  
   
   
   @Override

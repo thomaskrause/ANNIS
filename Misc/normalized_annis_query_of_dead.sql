@@ -5,8 +5,8 @@
 -- "harmless"  cat="S" & /d.*/ & /(e|f|h).*/ & #1 >* #2 & #1 >* #3 & #2 .1,40 #3 query
 
 --set effective_cache_size=500;
---set cpu_tuple_cost=0.01;
---set cpu_operator_cost=0.2;
+--set cpu_tuple_cost=0.2;
+--set cpu_operator_cost=0.8;
 
 --set enable_material=true;
 --set enable_mergejoin=true;
@@ -23,9 +23,9 @@ SELECT
 FROM
   (
     SELECT DISTINCT
-    rank1.node_ref AS id1,
-    node2.id AS id2,
-    node3.id AS id3,
+    rank1.node_ref AS id1, rank1.corpus_ref AS corpus1,
+    node2.id AS id2, node2.corpus_ref AS corpus2,
+    node3.id AS id3, node3.corpus_ref AS corpus3,
     rank1.toplevel_corpus
   FROM
     --node_2181 AS node1,
@@ -68,4 +68,4 @@ FROM
     --node3.span = 'Haus'
     node3.span ~ '^(e|f|h).*$'
   ) AS solutions
-
+;

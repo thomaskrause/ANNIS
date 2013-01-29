@@ -856,7 +856,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     }
   }
   
-  void createAnnotations(long corpusID)
+  protected void createAnnotations(long corpusID)
   {
     MapSqlParameterSource args = makeArgs().addValue(":id", corpusID);
     log.info("creating annotations table for corpus with ID " + corpusID);
@@ -875,7 +875,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     jdbcTemplate.execute("ANALYZE facts_" + corpusID);
   }
   
-  void createFacts(long corpusID)
+  protected void createFacts(long corpusID)
   {
     
     MapSqlParameterSource args = makeArgs().addValue(":id", corpusID);
