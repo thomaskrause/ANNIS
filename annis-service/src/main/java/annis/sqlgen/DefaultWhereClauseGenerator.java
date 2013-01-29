@@ -80,7 +80,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
   
   
   
-  void joinOnNode(List<String> conditions, QueryNode node, QueryNode target,
+  protected void joinOnNode(List<String> conditions, QueryNode node, QueryNode target,
     String operator, String leftColumn, String rightColumn)
   {
     conditions.add(join(operator,

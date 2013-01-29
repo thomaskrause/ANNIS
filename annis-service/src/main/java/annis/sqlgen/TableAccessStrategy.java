@@ -122,7 +122,7 @@ public class TableAccessStrategy {
 		return column(aliasedTable(table, count), columnName(table, column));
 	}
 	
-	protected String column(String table, String column) {
+	public String column(String table, String column) {
 		return table + "." + column;
 	}
 	

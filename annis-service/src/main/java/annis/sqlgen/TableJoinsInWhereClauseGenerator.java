@@ -132,8 +132,8 @@ public class TableJoinsInWhereClauseGenerator
 			int start = tables(node).isMaterialized(EDGE_ANNOTATION_TABLE, RANK_TABLE) ? 2 : 1;
 			for (int i = start; i <= node.getEdgeAnnotations().size(); ++i) 
       {
-				conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "rank_ref", i), tables(node).aliasedColumn(RANK_TABLE, "pre")));
-        conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "corpus_ref", i), tables(node).aliasedColumn(RANK_TABLE, "corpus_ref")));
+				conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "rank_ref", i), tables(node).aliasedColumn(RANK_TABLE, "id")));
+        //conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "corpus_ref", i), tables(node).aliasedColumn(RANK_TABLE, "corpus_ref")));
 			}
 		}
 
