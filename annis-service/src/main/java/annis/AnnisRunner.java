@@ -245,7 +245,8 @@ public class AnnisRunner extends AnnisBaseRunner
 
   public void doDebug(String ignore)
   {
-    doSql("subgraph salt:/pcc2/11299/#tok_1,salt:/pcc2/11299/#tok_2");
+    doCorpus("corpus tiger2");
+    doSql("cat=\"S\"");
   }
 
   public void doParse(String annisQuery)

@@ -200,6 +200,16 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     executeSqlFromScript("delete_corpus.sql", makeArgs().addValue(":ids",
       StringUtils.join(ids, ", ")));
   }
+
+  @Override
+  protected void populateSchema()
+  {
+    super.populateSchema();
+    
+    log.info(
+      "creating immutable functions for getting component types");
+    executeSqlFromScript(getDbLayout() + "/functions_get.sql"); 
+  }
   
   
   

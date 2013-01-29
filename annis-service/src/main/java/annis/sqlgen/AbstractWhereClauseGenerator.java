@@ -183,7 +183,7 @@ public abstract class AbstractWhereClauseGenerator extends
 
   protected abstract void addSingleEdgeCondition(QueryNode node,
       QueryNode target, List<String> conditions, Join join,
-      final String edgeType);
+      final String edgeType, List<Long> corpora);
 
   protected abstract void addSiblingConditions(List<String> conditions,
       QueryNode node, QueryNode target, Sibling join, QueryData queryData);

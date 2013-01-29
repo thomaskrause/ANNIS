@@ -17,6 +17,8 @@ package annis.sqlgen;
 
 import static annis.sqlgen.SqlConstraints.in;
 import static annis.sqlgen.TableAccessStrategy.NODE_TABLE;
+import static annis.sqlgen.TableAccessStrategy.NODE_ANNOTATION_TABLE;
+import static annis.sqlgen.TableAccessStrategy.EDGE_ANNOTATION_TABLE;
 import static annis.sqlgen.TableAccessStrategy.RANK_TABLE;
 
 import java.util.HashSet;
@@ -26,6 +28,7 @@ import java.util.Set;
 import annis.model.QueryNode;
 import annis.ql.parser.QueryData;
 import java.util.LinkedList;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -64,10 +67,26 @@ public class MetaDataAndCorpusWhereClauseGenerator
 
       if (corpusList != null && !corpusList.isEmpty())
       {
-        conditions.add(in(tables(node).aliasedColumn(NODE_TABLE,
+        TableAccessStrategy tas = tables(node);
+        conditions.add(in(tas.aliasedColumn(NODE_TABLE,
           "toplevel_corpus"),
           corpusList));
-        if(tables(node).usesRankTable() && !tables(node).isMaterialized(RANK_TABLE, NODE_TABLE))
+        
+        if (tas.usesNodeAnnotationTable() && !tas.isMaterialized(NODE_ANNOTATION_TABLE, NODE_TABLE))
+        {
+          conditions.add(in(tas.aliasedColumn(NODE_ANNOTATION_TABLE,
+          "toplevel_corpus"),
+          corpusList));
+        }
+        
+        if (tas.usesEdgeAnnotationTable() && !tas.isMaterialized(EDGE_ANNOTATION_TABLE, NODE_TABLE))
+        {
+          conditions.add(in(tas.aliasedColumn(EDGE_ANNOTATION_TABLE,
+          "toplevel_corpus"),
+          corpusList));
+        }
+        
+        if(tas.usesRankTable() && !tas.isMaterialized(RANK_TABLE, NODE_TABLE))
         {
           conditions.add(in(tables(node).aliasedColumn(RANK_TABLE,
             "toplevel_corpus"),

@@ -248,6 +248,25 @@ public class CommonAnnotateWithClauseGenerator
       sb.append(indent3).append(tas.aliasedColumn(NODE_TABLE, "toplevel_corpus")).
         append(" IN (").append(StringUtils.join(queryData.getCorpusList(), ",")).
         append(") AND\n");
+      
+      if(tas.usesNodeAnnotationTable() && !tas.isMaterialized(NODE_ANNOTATION_TABLE, NODE_TABLE))
+      {
+        sb.append(indent3).append(tas.aliasedColumn(NODE_ANNOTATION_TABLE, "toplevel_corpus")).
+        append(" IN (").append(StringUtils.join(queryData.getCorpusList(), ",")).
+        append(") AND\n");
+      }
+      if(tas.usesRankTable() && !tas.isMaterialized(RANK_TABLE, NODE_TABLE))
+      {
+        sb.append(indent3).append(tas.aliasedColumn(RANK_TABLE, "toplevel_corpus")).
+        append(" IN (").append(StringUtils.join(queryData.getCorpusList(), ",")).
+        append(") AND\n");
+      }
+      if(tas.usesEdgeAnnotationTable() && !tas.isMaterialized(EDGE_ANNOTATION_TABLE, NODE_TABLE))
+      {
+        sb.append(indent3).append(tas.aliasedColumn(EDGE_ANNOTATION_TABLE, "toplevel_corpus")).
+        append(" IN (").append(StringUtils.join(queryData.getCorpusList(), ",")).
+        append(") AND\n");
+      }
 
       sb.append(indent3).append(tas.aliasedColumn(NODE_TABLE, "n_sample")).append(
         " IS TRUE AND\n");

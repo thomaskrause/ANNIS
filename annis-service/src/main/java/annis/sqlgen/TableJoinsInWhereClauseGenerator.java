@@ -75,9 +75,9 @@ public class TableJoinsInWhereClauseGenerator
 		}
 
 		// component table
-		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(COMPONENT_TABLE, RANK_TABLE)) {
-			tables.add(tableAliasDefinition(node, COMPONENT_TABLE, 1));
-		}
+//		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(COMPONENT_TABLE, RANK_TABLE)) {
+//			tables.add(tableAliasDefinition(node, COMPONENT_TABLE, 1));
+//		}
 
 		// node annotations
 		if (tables(node).usesNodeAnnotationTable()) {
@@ -104,28 +104,36 @@ public class TableJoinsInWhereClauseGenerator
 		Set<String> conditions = new HashSet<String>();
 
 		// join rank table
-		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(RANK_TABLE, NODE_TABLE)) {
+		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(RANK_TABLE, NODE_TABLE)) 
+    {
 			conditions.add(join("=", tables(node).aliasedColumn(RANK_TABLE, "node_ref"), tables(node).aliasedColumn(NODE_TABLE, "id")));
+      conditions.add(join("=", tables(node).aliasedColumn(RANK_TABLE, "corpus_ref"), tables(node).aliasedColumn(NODE_TABLE, "corpus_ref")));
 		}
 
 		// join component table
-		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(COMPONENT_TABLE, RANK_TABLE)) {
-			conditions.add(join("=", tables(node).aliasedColumn(RANK_TABLE, "component_ref"), tables(node).aliasedColumn(COMPONENT_TABLE, "id")));
-		}
+//		if (tables(node).usesRankTable() && ! tables(node).isMaterialized(COMPONENT_TABLE, RANK_TABLE)) 
+//    {
+//			conditions.add(join("=", tables(node).aliasedColumn(RANK_TABLE, "component_ref"), tables(node).aliasedColumn(COMPONENT_TABLE, "id")));
+//		}
 
 		// join node annotations
-		if (tables(node).usesNodeAnnotationTable()) {
+		if (tables(node).usesNodeAnnotationTable()) 
+    {
 			int start = tables(node).isMaterialized(NODE_ANNOTATION_TABLE, NODE_TABLE) ? 2 : 1;
-			for (int i = start; i <= node.getNodeAnnotations().size(); ++i) {
+			for (int i = start; i <= node.getNodeAnnotations().size(); ++i) 
+      {
 				conditions.add(join("=", tables(node).aliasedColumn(NODE_ANNOTATION_TABLE, "node_ref", i), tables(node).aliasedColumn(NODE_TABLE, "id")));
+        conditions.add(join("=", tables(node).aliasedColumn(NODE_ANNOTATION_TABLE, "corpus_ref", i), tables(node).aliasedColumn(NODE_TABLE, "corpus_ref")));
 			}
 		}
 
 		// join edge annotations
 		if (tables(node).usesEdgeAnnotationTable()) {
 			int start = tables(node).isMaterialized(EDGE_ANNOTATION_TABLE, RANK_TABLE) ? 2 : 1;
-			for (int i = start; i <= node.getEdgeAnnotations().size(); ++i) {
+			for (int i = start; i <= node.getEdgeAnnotations().size(); ++i) 
+      {
 				conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "rank_ref", i), tables(node).aliasedColumn(RANK_TABLE, "pre")));
+        conditions.add(join("=", tables(node).aliasedColumn(EDGE_ANNOTATION_TABLE, "corpus_ref", i), tables(node).aliasedColumn(RANK_TABLE, "corpus_ref")));
 			}
 		}
 
