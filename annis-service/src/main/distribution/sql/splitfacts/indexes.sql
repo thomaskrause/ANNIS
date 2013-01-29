@@ -102,6 +102,6 @@ CREATE INDEX idx__edge_annotation_val_ns__:id
   (val_ns varchar_pattern_ops, rank_ref);
 
 ----- 2nd query
-CREATE INDEX idx__2nd_query_:id ON node_:id (text_ref,left_token, right_token);
+CREATE INDEX idx__2nd_query_:id ON node_:id (corpus_ref, text_ref,left_token, right_token);
 
 END; -- transaction
