@@ -64,4 +64,4 @@ SELECT r.corpus_ref, r.node_ref, r.pre, r.post, r.parent, r.root, r."level",
        r.type_ref, :id, 
         ea."name" || ':' || ea."value", ea.namespace || ':' || ea."name" || ':' || ea."value", 
        (row_number() OVER (PARTITION BY r.id))
-FROM _rank AS r JOIN _edge_annotation AS ea ON (ea.rank_ref = r.id);
+FROM _rank AS r LEFT JOIN _edge_annotation AS ea ON (ea.rank_ref = r.id);
