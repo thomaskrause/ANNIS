@@ -131,6 +131,7 @@ public abstract class AnnisBaseRunner
     System.out.println();
 
     ConsoleReader console = new ConsoleReader();
+    console.setExpandEvents(false);
     File annisDir = new File(System.getProperty("user.home") + "/.annis/");
     String annisDirPath = annisDir.getAbsolutePath();
     if (!annisDir.exists())
