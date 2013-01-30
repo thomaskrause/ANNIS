@@ -30,10 +30,10 @@ limitations under the License.
   </bean>  
 
   <util:map id="factsTableAliases">
-    <entry key="node" value="node" />
-    <entry key="node_annotation" value="node_annotation" />
-    <entry key="rank" value="rank" />
-    <entry key="edge_annotation" value="edge_annotation" />
+    <entry key="node" value="facts_node" />
+    <entry key="node_annotation" value="facts_node" />
+    <entry key="rank" value="facts_edge" />
+    <entry key="edge_annotation" value="facts_edge" />
   </util:map>
 
   <util:map id="factsColumnAliases">

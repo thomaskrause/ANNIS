@@ -78,6 +78,9 @@ limitations under the License.
 
   <bean id="sampleWhereClause" class="annis.sqlgen.SampleWhereClause"
         parent="tableAccessStrategyFactory" lazy-init="true" />
+  
+  <bean id="rownnumSampleWhereClause" class="annis.sqlgen.RownumSampleWhereClause"
+        parent="tableAccessStrategyFactory" lazy-init="true" />
 
   <bean id="metaDataAndCorpusWhereClauseGenerator" class="annis.sqlgen.MetaDataAndCorpusWhereClauseGenerator"
         parent="tableAccessStrategyFactory" lazy-init="true" />
@@ -316,7 +319,7 @@ limitations under the License.
     <ref bean="defaultWhereClauseGenerator" />
     <ref bean="subcorpusConstraintWhereClause" />
     <ref bean="metaDataAndCorpusWhereClauseGenerator" />
-<!--    <ref bean="sampleWhereClause" /> -->
+    <ref bean="rownnumSampleWhereClause" />
   </util:list>
 
   <!--
@@ -331,7 +334,6 @@ limitations under the License.
     <ref bean="metaDataAndCorpusWhereClauseGenerator" />
     <ref bean="sampleWhereClause" />
     <ref bean="corpusPathWhereClauseGenerator" />
-<!--    <ref bean="transitivePrecedence" /> -->
   </util:list>
 
 

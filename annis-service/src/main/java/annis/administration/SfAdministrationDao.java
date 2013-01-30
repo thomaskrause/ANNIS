@@ -149,32 +149,20 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.info("analyzing and shrinking imported tables for corpus with ID " + corpusID);
     
     log.debug("analyzing node table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_node_" + corpusID);
 
     log.debug("analyzing node_annotation table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_annotation_" + corpusID);
-    
-    log.debug("analyzing edge_annotation table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE edge_annotation_" + corpusID);
-    
-    log.debug("analyzing rank table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE rank_" + corpusID);
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_edge_" + corpusID);
 
     log.debug("analyzing component_type table for corpus with ID " + corpusID);
     getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type_" + corpusID);
     
     // general parent tables
     log.debug("analyzing general node table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE node");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_edge");
     
     log.debug("analyzing general node_annotation table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE node_annotation");
-    
-    log.debug("analyzing general edge_annotation table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE edge_annotation");
-    
-    log.debug("analyzing general rank table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE rank");
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_node");
 
     log.debug("analyzing general component_type table");
     getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type");
@@ -186,14 +174,13 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     for (long l : ids)
     {
       log.debug("dropping annotations table for corpus " + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS annotations_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS annotations_" + l + " CASCADE");
       
       log.debug("dropping partitioned tables for corpus " + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS edge_annotation_" + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS node_annotation_" + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS rank_" + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS component_type_" + l);
-      getJdbcTemplate().execute("DROP TABLE IF EXISTS node_" + l);
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS facts_edge_" + l + " CASCADE");
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS facts_node_" + l + " CASCADE");
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS component_type_" + l + " CASCADE");
+      getJdbcTemplate().execute("DROP TABLE IF EXISTS text_" + l + " CASCADE");
     }
     
     log.debug("recursivly deleting corpora: " + ids);

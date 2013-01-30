@@ -51,7 +51,7 @@ COMMENT ON COLUMN text.id IS 'primary key';
 COMMENT ON COLUMN text.name IS 'informational name of the primary data text';
 COMMENT ON COLUMN text.text IS 'raw text data';
 
-CREATE TABLE node (
+CREATE TABLE facts_node (
   id integer,
   text_ref integer,
   corpus_ref integer REFERENCES corpus(id),
@@ -68,19 +68,11 @@ CREATE TABLE node (
   right_token integer,
   seg_name varchar,
   seg_index integer,
-  PRIMARY KEY (corpus_ref, id),
+  val varchar,
+  val_ns varchar,
+  n_na_rownum smallint,
+  PRIMARY KEY (corpus_ref, id, n_na_rownum),
   FOREIGN KEY (corpus_ref, text_ref) REFERENCES text(corpus_ref, id)
-);
-
-CREATE TABLE node_annotation
-(
-  corpus_ref      integer,
-  node_ref 				integer,
-	val_ns          varchar, 
-	val             varchar,
-  toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY (corpus_ref, node_ref, val_ns),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
 );
 
 CREATE TABLE component_type
@@ -93,10 +85,9 @@ CREATE TABLE component_type
   UNIQUE("type", namespace, "name")
 );
 
-CREATE TABLE rank (
+CREATE TABLE facts_edge (
   corpus_ref integer REFERENCES corpus(id),
   node_ref integer, -- node reference
-  id integer PRIMARY KEY,
   pre integer NOT NULL, -- pre-order value
   post integer NOT NULL, -- post-order value
   parent integer, -- foreign key to rank.pre of the parent node, or NULL for roots
@@ -104,18 +95,12 @@ CREATE TABLE rank (
   "level" smallint,
   type_ref smallint REFERENCES component_type(id),
   toplevel_corpus integer REFERENCES corpus(id),
-  UNIQUE (corpus_ref, pre, toplevel_corpus),
-  FOREIGN KEY (corpus_ref, node_ref) REFERENCES node(corpus_ref, id)
+  val varchar,
+  val_ns varchar,
+  r_ea_rownum smallint,
+  PRIMARY KEY(corpus_ref, pre, r_ea_rownum)
 );
 
-CREATE TABLE edge_annotation
-(
-	rank_ref 				integer	REFERENCES rank(id),
-	val_ns          varchar, 
-	val             varchar,
-  toplevel_corpus integer REFERENCES corpus(id),
-  PRIMARY KEY (rank_ref, val_ns)
-);
 
 CREATE TABLE media_files
 (
