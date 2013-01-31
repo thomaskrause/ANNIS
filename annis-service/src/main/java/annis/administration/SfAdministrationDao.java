@@ -15,11 +15,17 @@
  */
 package annis.administration;
 
+import annis.sqlgen.SqlConstraints;
 import java.util.List;
+import javax.sql.RowSet;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import static annis.sqlgen.SqlConstraints.sqlString;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -95,6 +101,48 @@ public class SfAdministrationDao extends DefaultAdministrationDao
       log.info("indexing the new rank table for type {} (corpus with ID {})", t, corpusID);
       MapSqlParameterSource args = makeArgs().addValue(":id", corpusID).addValue(":type", t);    
       executeSqlFromScript(getDbLayout() + "/indexes_rank.sql", args);    
+    }
+    
+    // query for all annotation categories and their borders
+    SqlRowSet annos =
+      getJdbcTemplate().queryForRowSet(
+      "SELECT \"type\", namespace, \"name\", min(\"value\") AS lower, max(value) AS upper \n" +
+      "FROM annotations_" + corpusID + "\n" +
+      "GROUP BY \"type\", namespace, \"name\"\n" +
+      "ORDER BY lower");
+    
+    Set<String> alreadyDefinedNames = new HashSet<String>();
+    
+    while(annos.next())
+    {    
+      
+      String type = annos.getString("type");
+      String name = annos.getString("name");
+      String namespace = annos.getString("namespace");
+      String lower = annos.getString("lower");
+      String upper = annos.getString("upper");
+
+      String typeAndName = type + ":" + name;
+      
+      log.info("{}: indexing {}:{} annotation category ({})", 
+        new String[] {typeAndName, namespace, name, type});
+      
+      if(!alreadyDefinedNames.contains(typeAndName))
+      {
+        getJdbcTemplate().execute("CREATE INDEX \"idx__anno_" + type
+          + "_" + name + "__" + corpusID + "\"" + 
+          " ON facts_" + type + "_" + corpusID
+          + "(val) WHERE val ~>=~ " + sqlString(name + ":" + lower) + " AND "
+          + "val ~<=~ " + sqlString(name + ":" + upper));
+        
+        alreadyDefinedNames.add(typeAndName);
+      }
+      
+      getJdbcTemplate().execute("CREATE INDEX \"idx__anno_" + type
+        + "_" + namespace+ "_" + name + "__" + corpusID + "\"" + 
+        " ON facts_" + type + "_" + corpusID
+        + "(val) WHERE val ~>=~ " + sqlString(namespace + ":" + name + ":" + lower) + " AND "
+        + "val ~<=~ " + sqlString(namespace + ":" + name + ":" + upper));
     }
   }
 

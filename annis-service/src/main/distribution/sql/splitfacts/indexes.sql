@@ -85,12 +85,12 @@ CREATE INDEX idx__node_rownum__:id
   (n_na_rownum);
 
 -- node_annotation
-CREATE INDEX idx__node_annotation_val__:id
+CREATE INDEX idx__nanno_val__:id
   ON facts_node_:id
   USING btree
   (val varchar_pattern_ops);
 
-CREATE INDEX idx__node_annotation_val_ns__:id
+CREATE INDEX idx__nanno_val_ns__:id
   ON facts_node_:id
   USING btree
   (val_ns varchar_pattern_ops);
