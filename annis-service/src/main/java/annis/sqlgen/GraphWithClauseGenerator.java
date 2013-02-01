@@ -95,7 +95,7 @@ public class GraphWithClauseGenerator extends CommonAnnotateWithClauseGenerator
         .append(" AS ").append("corpus").append(i).append(", ");
 
       sb.append(tas.tableName(NODE_TABLE)).append(i).append(".")
-        .append(tas.columnName(NODE_TABLE, "node_name"))
+        .append(tas.columnName(NODE_TABLE, "name"))
         .append(" AS ").append("name").append(i);
 
       if (i == numOfNodes)
@@ -147,7 +147,8 @@ public class GraphWithClauseGenerator extends CommonAnnotateWithClauseGenerator
 
       // filter the node with the right name
       sb.append(indent2)
-        .append(tas.tableName(NODE_TABLE)).append(i).append(".node_name = ")
+        .append(tas.tableName(NODE_TABLE)).append(i).append(".")
+        .append(tas.columnName(NODE_TABLE, "name")).append(" = ")
         .append("'").append(uri.getFragment()).append("'").append(" AND\n");
 
       // use the toplevel partioning

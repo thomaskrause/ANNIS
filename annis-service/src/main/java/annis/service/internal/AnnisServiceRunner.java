@@ -270,7 +270,7 @@ public class AnnisServiceRunner extends AnnisBaseRunner
     }
     catch (Exception ex)
     {
-      log.error("could not start ANNIS REST service", ex);
+      log.error("could not start ANNIS REST service: " + ex, ex);
       isShutdownRequested = true;
       
       if(rethrowExceptions)

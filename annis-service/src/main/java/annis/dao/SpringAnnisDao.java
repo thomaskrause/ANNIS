@@ -83,7 +83,6 @@ public class SpringAnnisDao extends SimpleJdbcDaoSupport implements AnnisDao,
   private CountMatchesAndDocumentsSqlGenerator countMatchesAndDocumentsSqlGenerator;
   private CountSqlGenerator countSqlGenerator;
   private AnnotateSqlGenerator<SaltProject> annotateSqlGenerator;
-  private SaltAnnotateExtractor saltAnnotateExtractor;
   private MatrixSqlGenerator matrixSqlGenerator;
   private AnnotateSqlGenerator<SaltProject> graphSqlGenerator;
   // configuration
@@ -95,7 +94,7 @@ public class SpringAnnisDao extends SimpleJdbcDaoSupport implements AnnisDao,
   @Transactional
   public SaltProject graph(QueryData data)
   {
-    return executeQueryFunction(data, graphSqlGenerator, saltAnnotateExtractor);
+    return executeQueryFunction(data, graphSqlGenerator, graphSqlGenerator.getResultExtractor());
   }
 
   /**
@@ -292,7 +291,7 @@ public class SpringAnnisDao extends SimpleJdbcDaoSupport implements AnnisDao,
   public SaltProject annotate(QueryData queryData)
   {
     return executeQueryFunction(queryData, annotateSqlGenerator,
-      saltAnnotateExtractor);
+      annotateSqlGenerator.getResultExtractor());
   }
 
   @Transactional(readOnly = true)
@@ -717,17 +716,6 @@ public class SpringAnnisDao extends SimpleJdbcDaoSupport implements AnnisDao,
   public void setMatrixSqlGenerator(MatrixSqlGenerator matrixSqlGenerator)
   {
     this.matrixSqlGenerator = matrixSqlGenerator;
-  }
-
-  public SaltAnnotateExtractor getSaltAnnotateExtractor()
-  {
-    return saltAnnotateExtractor;
-  }
-
-  public void setSaltAnnotateExtractor(
-    SaltAnnotateExtractor saltAnnotateExtractor)
-  {
-    this.saltAnnotateExtractor = saltAnnotateExtractor;
   }
 
   public ByteHelper getByteHelper()

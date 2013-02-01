@@ -21,6 +21,8 @@ limitations under the License.
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
+    
+  
   <!-- WHERE clause generator -->
   <bean id="defaultWhereClauseGenerator" class="annis.sqlgen.splitfacts.SfWhereClauseGenerator"
         parent="defaultWhereClauseGeneratorBase" lazy-init="true">
@@ -39,8 +41,34 @@ limitations under the License.
   <util:map id="factsColumnAliases">
   </util:map>
   
-  <bean id="annotateSqlGenerator" class="annis.sqlgen.annopool.ApAnnotateSqlGenerator"
+  <util:map id="annotateOuterQueryColumnAliases">
+    <entry key="component_type">
+      <util:map>
+        <entry key="id" value="ct_id" />
+        <entry key="name" value="edge_name" />
+        <entry key="namespace" value="edge_namespace" />
+        <entry key="type" value="edge_type" />
+      </util:map>
+    </entry>
+    <entry key="component">
+      <util:map>
+        <entry key="name" value="edge_name" />
+        <entry key="namespace" value="edge_namespace" />
+        <entry key="type" value="edge_type" />
+      </util:map>
+    </entry>
+  </util:map>
+  
+  
+  <bean id="splitfactsAnnoExtractor" class="annis.sqlgen.SaltAnnotateExtractor" 
+        lazy-init="true" parent="saltAnnotateExtractor">
+    <property name="extractAnnotationFromValue" value="true" />
+    <property name="corpusRefIsComponentID" value="true" />
+  </bean>
+  
+  <bean id="annotateSqlGenerator" class="annis.sqlgen.splitfacts.SfAnnotateSqlGenerator"
         parent="annotateSqlGeneratorBase" lazy-init="true">
+    <property name="resultExtractor" ref="splitfactsAnnoExtractor"/>
   </bean>
 
 
@@ -50,6 +78,7 @@ limitations under the License.
   
   <bean id="graphSqlGenerator" class="annis.sqlgen.annopool.ApAnnotateSqlGenerator" parent="annotateSqlGenerator" lazy-init="true">
     <property name="withClauseSqlGenerator" ref="graphWithClauseSqlGenerator" />
+    <property name="resultExtractor" ref="splitfactsAnnoExtractor"/>
   </bean>
 
 

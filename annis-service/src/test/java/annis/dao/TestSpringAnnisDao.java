@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -50,7 +49,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import annis.test.TestHelper;
 import annis.model.Annotation;
-import annis.model.AnnotationGraph;
 import annis.ql.parser.AnnisParser;
 import annis.ql.parser.QueryAnalysis;
 import annis.ql.parser.QueryData;
@@ -63,10 +61,8 @@ import annis.sqlgen.SqlGenerator;
 import annis.ql.node.Start;
 import annis.service.objects.AnnisAttribute;
 import annis.sqlgen.SaltAnnotateExtractor;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import java.util.LinkedList;
 import javax.annotation.Resource;
-import org.springframework.context.annotation.PropertySource;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 // TODO: do not test context only for annopool
@@ -122,7 +118,7 @@ public class TestSpringAnnisDao
     simpleAnnisDao.setAqlParser(annisParser);
     simpleAnnisDao.setSqlGenerator(sqlGenerator);
     simpleAnnisDao.setAnnotateSqlGenerator(annotateSqlGenerator);
-    simpleAnnisDao.setSaltAnnotateExtractor(saltAnnotateExtractor);
+    annotateSqlGenerator.setResultExtractor(saltAnnotateExtractor);
     simpleAnnisDao.setPlanRowMapper(planRowMapper);
     simpleAnnisDao.setJdbcTemplate(jdbcTemplate);
     simpleAnnisDao.setListCorpusSqlHelper(listCorpusHelper);

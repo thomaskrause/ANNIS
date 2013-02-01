@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package annis.sqlgen.fullfacts;
+package annis.sqlgen.splitfacts;
 
 
 import annis.model.QueryNode;
 import annis.ql.parser.QueryData;
 import annis.sqlgen.AnnotateSqlGenerator;
 import annis.sqlgen.LimitOffsetQueryData;
-import annis.sqlgen.SolutionKey;
 import annis.sqlgen.TableAccessStrategy;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 
-import static annis.sqlgen.TableAccessStrategy.COMPONENT_TABLE;
+import static annis.sqlgen.TableAccessStrategy.COMPONENT_TYPE_TABLE;
 import static annis.sqlgen.TableAccessStrategy.NODE_TABLE;
 import static annis.sqlgen.TableAccessStrategy.RANK_TABLE;
 import static annis.sqlgen.TableAccessStrategy.NODE_ANNOTATION_TABLE;
@@ -38,7 +36,7 @@ import static annis.sqlgen.SqlConstraints.sqlString;
  *
  * @author thomas
  */
-public class FfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
+public class SfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
 {
   @Override
   public String getDocumentQuery(String toplevelCorpusName, String documentName)
@@ -103,16 +101,11 @@ public class FfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
     addSelectClauseAttribute(fields, RANK_TABLE, "parent");
     addSelectClauseAttribute(fields, RANK_TABLE, "root");
     addSelectClauseAttribute(fields, RANK_TABLE, "level");
-    addSelectClauseAttribute(fields, COMPONENT_TABLE, "id");
-    addSelectClauseAttribute(fields, COMPONENT_TABLE, "type");
-    addSelectClauseAttribute(fields, COMPONENT_TABLE, "name");
-    addSelectClauseAttribute(fields, COMPONENT_TABLE, "namespace");
-    addSelectClauseAttribute(fields, NODE_ANNOTATION_TABLE, "namespace");
-    addSelectClauseAttribute(fields, NODE_ANNOTATION_TABLE, "name");
-    addSelectClauseAttribute(fields, NODE_ANNOTATION_TABLE, "value");
-    addSelectClauseAttribute(fields, EDGE_ANNOTATION_TABLE, "namespace");
-    addSelectClauseAttribute(fields, EDGE_ANNOTATION_TABLE, "name");
-    addSelectClauseAttribute(fields, EDGE_ANNOTATION_TABLE, "value");
+    addSelectClauseAttribute(fields, COMPONENT_TYPE_TABLE, "type");
+    addSelectClauseAttribute(fields, COMPONENT_TYPE_TABLE, "name");
+    addSelectClauseAttribute(fields, COMPONENT_TYPE_TABLE, "namespace");
+    addSelectClauseAttribute(fields, NODE_ANNOTATION_TABLE, "val_ns");
+    addSelectClauseAttribute(fields, EDGE_ANNOTATION_TABLE, "val_ns");
 
     sb.append(innerIndent).append(StringUtils.join(fields, ",\n" + indent + TABSTOP));
     sb.append(",\n");
@@ -133,16 +126,38 @@ public class FfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
   public String fromClause(QueryData queryData,
     List<QueryNode> alternative, String indent)
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     sb.append(indent).append("solutions,\n");
-
-    // really ugly
-    sb.append(indent).append(TABSTOP).append(
-      getTableJoinsInFromClauseSqlGenerator().fromClauseForNode(null, true));
+   
+    sb
+      .append(indent).append(TABSTOP)
+      .append("facts_node LEFT JOIN facts_edge ON (facts_node.id = facts_edge.node_ref AND facts_node.corpus_ref = facts_edge.corpus_ref) ")
+      .append("LEFT JOIN component_type ON (facts_edge.type_ref = component_type.id)");
+    
     sb.append(",\n");
     sb.append(indent).append(TABSTOP).append(TableAccessStrategy.CORPUS_TABLE);
 
     return sb.toString();
   }
+
+  @Override
+  public String orderByClause(QueryData queryData,
+    List<QueryNode> alternative, String indent)
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append("solutions.n, ");
+    sb.append(tables(null).aliasedColumn(NODE_TABLE, "corpus_ref")).append(", ");
+    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "type")).append(", ");
+    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "namespace")).append(", ");
+    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "name")).append(", ");
+    String preColumn = tables(null).aliasedColumn(RANK_TABLE, "pre");
+    sb.append(preColumn);
+    String orderByClause = sb.toString();
+    return orderByClause;
+  }
+  
+  
+
+  
 }

@@ -57,7 +57,8 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
   private static final org.slf4j.Logger log = LoggerFactory.getLogger(SaltAnnotateExtractor.class);
   private TableAccessStrategy outerQueryTableAccessStrategy;
   private CorpusPathExtractor corpusPathExtractor;
-  
+  private boolean extractAnnotationFromValue;
+  private boolean corpusRefIsComponentID;
   
   public SaltAnnotateExtractor()
   {
@@ -161,10 +162,10 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
         SNode node = createOrFindNewNode(resultSet, graph, allTextIDs, tokenTexts,
           tokenByIndex, nodeBySegmentationPath, key, keyNameList);
         long pre = longValue(resultSet, RANK_TABLE, "pre");
-        long componentID = longValue(resultSet, RANK_TABLE, "component_id");
+        long corpus_ref = longValue(resultSet, RANK_TABLE, "corpus_ref");
         if (!resultSet.wasNull())
         {
-          nodeByPre.put(new RankID(componentID, pre), node);
+          nodeByPre.put(new RankID(corpus_ref, pre), node);
           createRelation(resultSet, graph, nodeByPre, node);
         }
       } // end while new result row
@@ -180,7 +181,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     }
     catch(Exception ex)
     {
-      log.error("could not map result set to SaltProject", ex);
+      log.error("could not map result set to SaltProject: " + ex.getMessage(), ex);
     }
 
     return project;
@@ -349,7 +350,8 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     SolutionKey<?> key,
     String[] keyNameList) throws SQLException
   {
-    String name = stringValue(resultSet, NODE_TABLE, "node_name");
+    
+    String name = stringValue(resultSet, NODE_TABLE, "name");
     long internalID = longValue(resultSet, "node", "id");
 
     long tokenIndex = longValue(resultSet, NODE_TABLE, "token_index");
@@ -419,11 +421,37 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
       
     }
 
-    String nodeAnnoValue =
-      stringValue(resultSet, NODE_ANNOTATION_TABLE, "value");
-    String nodeAnnoNameSpace = stringValue(resultSet, NODE_ANNOTATION_TABLE,
-      "namespace");
-    String nodeAnnoName = stringValue(resultSet, NODE_ANNOTATION_TABLE, "name");
+    String nodeAnnoValue = "";
+    String nodeAnnoName = "";
+    String nodeAnnoNameSpace = "";
+       
+    if(extractAnnotationFromValue)
+    {
+      String rawVal = stringValue(resultSet, NODE_TABLE, "val_ns");
+      if(rawVal != null)
+      {
+        String[] combinedVal = rawVal.split(
+        ":", 3);
+        if (combinedVal.length == 3)
+        {
+          nodeAnnoNameSpace = combinedVal[0];
+          nodeAnnoName = combinedVal[1];
+          nodeAnnoValue = combinedVal[2];
+        }
+        else
+        {
+          log.warn("Invalid node annotation {} detected", combinedVal);
+        }
+      }
+    }
+    else
+    {
+      nodeAnnoValue = stringValue(resultSet, NODE_ANNOTATION_TABLE, "value");
+      nodeAnnoNameSpace = stringValue(resultSet, NODE_ANNOTATION_TABLE,
+        "namespace");
+      nodeAnnoName = stringValue(resultSet, NODE_ANNOTATION_TABLE, "name");
+    }
+    
     if (!resultSet.wasNull())
     {
       String fullName = (nodeAnnoNameSpace == null ? "" : (nodeAnnoNameSpace
@@ -732,26 +760,50 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
   private void addEdgeAnnotations(ResultSet resultSet, SRelation rel) 
     throws SQLException
   {
-    String edgeAnnoValue =
-        stringValue(resultSet, EDGE_ANNOTATION_TABLE, "value");
-      String edgeAnnoNameSpace = stringValue(resultSet, EDGE_ANNOTATION_TABLE,
-        "namespace");
-      String edgeAnnoName =
-        stringValue(resultSet, EDGE_ANNOTATION_TABLE, "name");
-      if (!resultSet.wasNull())
+    String edgeAnnoValue = "";
+    String edgeAnnoName = "";
+    String edgeAnnoNameSpace = "";
+       
+    if(extractAnnotationFromValue)
+    {
+      String[] combinedVal = stringValue(resultSet, EDGE_ANNOTATION_TABLE, "val_ns").split(
+        ":", 3);
+      if(combinedVal.length == 3)
       {
-        String fullName = edgeAnnoNameSpace == null ? "" : edgeAnnoNameSpace
-          + "::" + edgeAnnoName;
-        SAnnotation anno = rel.getSAnnotation(fullName);
-        if (anno == null)
-        {
-          anno = SaltFactory.eINSTANCE.createSAnnotation();
-          anno.setSNS(edgeAnnoNameSpace == null ? "" : edgeAnnoNameSpace);
-          anno.setSName(edgeAnnoName);
-          anno.setSValue(edgeAnnoValue);
-          rel.addSAnnotation(anno);
-        }
-      } // end if edgeAnnoName exists
+        edgeAnnoNameSpace = combinedVal[0];
+        edgeAnnoName = combinedVal[1];
+        edgeAnnoValue = combinedVal[2];
+      }
+      else
+      {
+        log.warn("Invalid node annotation {} detected", combinedVal);
+      }
+    }
+    else
+    {
+      edgeAnnoValue =
+        stringValue(resultSet, EDGE_ANNOTATION_TABLE, "value");
+      edgeAnnoNameSpace = stringValue(resultSet, EDGE_ANNOTATION_TABLE,
+        "namespace");
+      edgeAnnoName =
+        stringValue(resultSet, EDGE_ANNOTATION_TABLE, "name");
+    }
+    
+    
+    if (!resultSet.wasNull())
+    {
+      String fullName = edgeAnnoNameSpace == null ? "" : edgeAnnoNameSpace
+        + "::" + edgeAnnoName;
+      SAnnotation anno = rel.getSAnnotation(fullName);
+      if (anno == null)
+      {
+        anno = SaltFactory.eINSTANCE.createSAnnotation();
+        anno.setSNS(edgeAnnoNameSpace == null ? "" : edgeAnnoNameSpace);
+        anno.setSName(edgeAnnoName);
+        anno.setSValue(edgeAnnoValue);
+        rel.addSAnnotation(anno);
+      }
+    } // end if edgeAnnoName exists
   }
 
   private SRelation createRelation(ResultSet resultSet, SDocumentGraph graph,
@@ -765,7 +817,15 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     }
 
     long pre = longValue(resultSet, RANK_TABLE, "pre");
-    long componentID = longValue(resultSet, RANK_TABLE, "component_id");
+    long componentID;
+    if(corpusRefIsComponentID)
+    {
+      componentID = longValue(resultSet, RANK_TABLE, "corpus_ref");
+    }
+    else
+    {
+      componentID = longValue(resultSet, RANK_TABLE, "component_id");
+    }
     String edgeNamespace = stringValue(resultSet, COMPONENT_TABLE, "namespace");
     String edgeName = stringValue(resultSet, COMPONENT_TABLE, "name");
     String type = stringValue(resultSet, COMPONENT_TABLE, "type");
@@ -835,7 +895,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     throws SQLException
   {
     return resultSet.getString(outerQueryTableAccessStrategy.columnName(
-      table, column));
+      table, column));    
   }
 
   public CorpusPathExtractor getCorpusPathExtractor()
@@ -858,6 +918,28 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
   {
     this.outerQueryTableAccessStrategy = outerQueryTableAccessStrategy;
   }
+
+  public boolean isExtractAnnotationFromValue()
+  {
+    return extractAnnotationFromValue;
+  }
+
+  public void setExtractAnnotationFromValue(boolean extractAnnotationFromValue)
+  {
+    this.extractAnnotationFromValue = extractAnnotationFromValue;
+  }
+
+  public boolean isCorpusRefIsComponentID()
+  {
+    return corpusRefIsComponentID;
+  }
+
+  public void setCorpusRefIsComponentID(boolean corpusRefIsComponentID)
+  {
+    this.corpusRefIsComponentID = corpusRefIsComponentID;
+  }
+  
+  
   
   public static class FastInverseMap<KeyType, ValueType>
   {
@@ -943,7 +1025,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     {
       return pre;
     }
-
+    
     @Override
     public boolean equals(Object obj)
     {
