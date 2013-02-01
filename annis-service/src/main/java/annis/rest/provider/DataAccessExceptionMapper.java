@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import org.postgresql.util.PSQLException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
@@ -27,11 +28,11 @@ import org.springframework.dao.DataAccessResourceFailureException;
  * @author Thomas Krause <thomas.krause@alumni.hu-berlin.de>
  */
 @Provider
-public class SQLExceptionMapper implements ExceptionMapper<DataAccessResourceFailureException>
+public class DataAccessExceptionMapper implements ExceptionMapper<DataAccessException>
 {
 
   @Override
-  public Response toResponse(DataAccessResourceFailureException ex)
+  public Response toResponse(DataAccessException ex)
   {
     if(ex.getCause() instanceof PSQLException)
     {

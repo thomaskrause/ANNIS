@@ -245,7 +245,16 @@ public class SpringAnnisDao extends SimpleJdbcDaoSupport implements AnnisDao,
     }
 
     // execute query and return result
-    return jdbcTemplate.query(generator.toSql(queryData), extractor);
+    try
+    {
+      return jdbcTemplate.query(generator.toSql(queryData), extractor);
+    }
+    catch(DataAccessException ex)
+    {
+      log.error(ex.getMessage(), ex);
+      // re-throw error
+      throw ex;
+    }
   }
 
   @Override

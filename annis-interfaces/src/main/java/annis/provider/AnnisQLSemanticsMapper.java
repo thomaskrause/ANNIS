@@ -28,7 +28,6 @@ import javax.ws.rs.ext.Provider;
 public class AnnisQLSemanticsMapper implements
   ExceptionMapper<AnnisQLSemanticsException>
 {
-
   @Override
   public Response toResponse(AnnisQLSemanticsException exception)
   {

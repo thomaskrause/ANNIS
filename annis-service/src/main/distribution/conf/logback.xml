@@ -45,7 +45,7 @@
   <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${annis.home}/log/error.log</file>
     <encoder>
-      <pattern>%p [%t] %date{ISO8601} %C{1} - %m%n</pattern>
+      <pattern>%p [%t] %date{ISO8601} %C{1} - %m %ex %n</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>WARN</level>
