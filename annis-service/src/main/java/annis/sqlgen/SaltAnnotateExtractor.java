@@ -765,17 +765,21 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
        
     if(extractAnnotationFromValue)
     {
-      String[] combinedVal = stringValue(resultSet, EDGE_ANNOTATION_TABLE, "val_ns").split(
-        ":", 3);
-      if(combinedVal.length == 3)
+      String rawVal = stringValue(resultSet, EDGE_ANNOTATION_TABLE, "val_ns");
+      if(rawVal != null)
       {
-        edgeAnnoNameSpace = combinedVal[0];
-        edgeAnnoName = combinedVal[1];
-        edgeAnnoValue = combinedVal[2];
-      }
-      else
-      {
-        log.warn("Invalid node annotation {} detected", combinedVal);
+        String[] combinedVal = rawVal.split(
+          ":", 3);
+        if(combinedVal.length == 3)
+        {
+          edgeAnnoNameSpace = combinedVal[0];
+          edgeAnnoName = combinedVal[1];
+          edgeAnnoValue = combinedVal[2];
+        }
+        else
+        {
+          log.warn("Invalid node annotation {} detected", combinedVal);
+        }
       }
     }
     else
