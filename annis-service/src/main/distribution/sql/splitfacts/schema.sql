@@ -88,6 +88,7 @@ CREATE TABLE component_type
 CREATE TABLE facts_edge (
   corpus_ref integer REFERENCES corpus(id),
   node_ref integer, -- node reference
+  component_id integer, -- component id: not not use in queries
   pre integer NOT NULL, -- pre-order value
   post integer NOT NULL, -- post-order value
   parent integer, -- foreign key to rank.pre of the parent node, or NULL for roots

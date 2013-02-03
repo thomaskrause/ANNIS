@@ -58,9 +58,9 @@ CREATE UNLOGGED TABLE facts_edge_:id (
 
 ) INHERITS(facts_edge);
 
-INSERT INTO facts_edge_:id (corpus_ref, node_ref, pre, post, parent, root, "level", 
+INSERT INTO facts_edge_:id (corpus_ref, node_ref, component_id, pre, post, parent, root, "level", 
   type_ref, toplevel_corpus, val, val_ns, r_ea_rownum)
-SELECT r.corpus_ref, r.node_ref, r.pre, r.post, r.parent, r.root, r."level", 
+SELECT r.corpus_ref, r.node_ref, r.component_ref, r.pre, r.post, r.parent, r.root, r."level", 
        r.type_ref, :id, 
         ea."name" || ':' || ea."value", ea.namespace || ':' || ea."name" || ':' || ea."value", 
        (row_number() OVER (PARTITION BY r.id))

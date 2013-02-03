@@ -58,7 +58,6 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
   private TableAccessStrategy outerQueryTableAccessStrategy;
   private CorpusPathExtractor corpusPathExtractor;
   private boolean extractAnnotationFromValue;
-  private boolean corpusRefIsComponentID;
   
   public SaltAnnotateExtractor()
   {
@@ -162,10 +161,10 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
         SNode node = createOrFindNewNode(resultSet, graph, allTextIDs, tokenTexts,
           tokenByIndex, nodeBySegmentationPath, key, keyNameList);
         long pre = longValue(resultSet, RANK_TABLE, "pre");
-        long corpus_ref = longValue(resultSet, RANK_TABLE, "corpus_ref");
+        long component_id = longValue(resultSet, RANK_TABLE, "component_id");
         if (!resultSet.wasNull())
         {
-          nodeByPre.put(new RankID(corpus_ref, pre), node);
+          nodeByPre.put(new RankID(component_id, pre), node);
           createRelation(resultSet, graph, nodeByPre, node);
         }
       } // end while new result row
@@ -817,15 +816,8 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     }
 
     long pre = longValue(resultSet, RANK_TABLE, "pre");
-    long componentID;
-    if(corpusRefIsComponentID)
-    {
-      componentID = longValue(resultSet, RANK_TABLE, "corpus_ref");
-    }
-    else
-    {
-      componentID = longValue(resultSet, RANK_TABLE, "component_id");
-    }
+    long componentID = longValue(resultSet, RANK_TABLE, "component_id");
+    
     String edgeNamespace = stringValue(resultSet, COMPONENT_TABLE, "namespace");
     String edgeName = stringValue(resultSet, COMPONENT_TABLE, "name");
     String type = stringValue(resultSet, COMPONENT_TABLE, "type");
@@ -929,17 +921,6 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     this.extractAnnotationFromValue = extractAnnotationFromValue;
   }
 
-  public boolean isCorpusRefIsComponentID()
-  {
-    return corpusRefIsComponentID;
-  }
-
-  public void setCorpusRefIsComponentID(boolean corpusRefIsComponentID)
-  {
-    this.corpusRefIsComponentID = corpusRefIsComponentID;
-  }
-  
-  
   
   public static class FastInverseMap<KeyType, ValueType>
   {

@@ -63,7 +63,6 @@ limitations under the License.
   <bean id="splitfactsAnnoExtractor" class="annis.sqlgen.SaltAnnotateExtractor" 
         lazy-init="true" parent="saltAnnotateExtractor">
     <property name="extractAnnotationFromValue" value="true" />
-    <property name="corpusRefIsComponentID" value="true" />
   </bean>
   
   <bean id="annotateSqlGenerator" class="annis.sqlgen.splitfacts.SfAnnotateSqlGenerator"

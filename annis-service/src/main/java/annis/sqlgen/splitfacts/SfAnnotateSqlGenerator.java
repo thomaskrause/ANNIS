@@ -96,6 +96,7 @@ public class SfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
     addSelectClauseAttribute(fields, NODE_TABLE, "right_token");
     addSelectClauseAttribute(fields, NODE_TABLE, "seg_name");
     addSelectClauseAttribute(fields, NODE_TABLE, "seg_index");
+    addSelectClauseAttribute(fields, RANK_TABLE, "component_id");
     addSelectClauseAttribute(fields, RANK_TABLE, "pre");
     addSelectClauseAttribute(fields, RANK_TABLE, "post");
     addSelectClauseAttribute(fields, RANK_TABLE, "parent");
@@ -148,9 +149,7 @@ public class SfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
     StringBuilder sb = new StringBuilder();
     sb.append("solutions.n, ");
     sb.append(tables(null).aliasedColumn(NODE_TABLE, "corpus_ref")).append(", ");
-    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "type")).append(", ");
-    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "namespace")).append(", ");
-    sb.append(tables(null).aliasedColumn(COMPONENT_TYPE_TABLE, "name")).append(", ");
+    sb.append(tables(null).aliasedColumn(RANK_TABLE, "component_id")).append(", ");
     String preColumn = tables(null).aliasedColumn(RANK_TABLE, "pre");
     sb.append(preColumn);
     String orderByClause = sb.toString();
