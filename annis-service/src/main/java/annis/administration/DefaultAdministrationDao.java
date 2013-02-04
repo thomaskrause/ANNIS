@@ -922,6 +922,7 @@ public class DefaultAdministrationDao implements AdministrationDao
       log.debug("dropping facts table for corpus " + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS facts_" + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS facts_edge_" + l);
+      jdbcTemplate.execute("DROP TABLE IF EXISTS component_type_" + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS facts_node_" + l);
       log.debug("dropping annotation_pool table for corpus " + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS annotation_pool_" + l);

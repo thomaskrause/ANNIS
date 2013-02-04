@@ -134,7 +134,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
         getJdbcTemplate().execute("CREATE INDEX \"idx__anno_" + type
           + "_" + name + "__" + corpusID + "\"" + 
           " ON facts_" + type + "_" + corpusID
-          + "(val) WHERE val ~>=~ " + sqlString(name + ":" + lower) + " AND "
+          + "(val) WITH(FILLFACTOR=100) WHERE val ~>=~ " + sqlString(name + ":" + lower) + " AND "
           + "val ~<=~ " + sqlString(name + ":" + upper));
         
         alreadyDefinedNames.add(typeAndName);
@@ -143,7 +143,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
       getJdbcTemplate().execute("CREATE INDEX \"idx__anno_" + type
         + "_" + namespace+ "_" + name + "__" + corpusID + "\"" + 
         " ON facts_" + type + "_" + corpusID
-        + "(val) WHERE val ~>=~ " + sqlString(namespace + ":" + name + ":" + lower) + " AND "
+        + "(val) WITH(FILLFACTOR=100) WHERE val ~>=~ " + sqlString(namespace + ":" + name + ":" + lower) + " AND "
         + "val ~<=~ " + sqlString(namespace + ":" + name + ":" + upper));
     }
   }
@@ -199,6 +199,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.info("analyzing and shrinking imported tables for corpus with ID " + corpusID);
     
     log.debug("analyzing node table for corpus with ID " + corpusID);
+    getJdbcTemplate().execute("ALTER TABLE facts_node_" + corpusID + " ALTER COLUMN span SET STATISTICS 200");
+    
     getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_node_" + corpusID);
 
     log.debug("analyzing node_annotation table for corpus with ID " + corpusID);
