@@ -26,6 +26,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import static annis.sqlgen.SqlConstraints.sqlString;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -88,6 +89,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   }
 
   @Override
+  @Transactional(readOnly=false)
   protected void createFacts(long corpusID)
   {
     super.createFacts(corpusID);
