@@ -148,7 +148,7 @@ public class SfAnnotateSqlGenerator<T> extends AnnotateSqlGenerator<T>
     sb
       .append(indent).append(TABSTOP)
       .append("facts_node LEFT JOIN facts_edge ON (facts_node.id = facts_edge.node_ref AND facts_node.corpus_ref = facts_edge.corpus_ref) ")
-      .append("LEFT JOIN component_type ON (facts_edge.type_ref = component_type.id)");
+      .append("LEFT JOIN component_type ON (facts_edge.type_ref = component_type.id AND facts_edge.toplevel_corpus = component_type.toplevel_corpus)");
     
     sb.append(",\n");
     sb.append(indent).append(TABSTOP).append(TableAccessStrategy.CORPUS_TABLE);
