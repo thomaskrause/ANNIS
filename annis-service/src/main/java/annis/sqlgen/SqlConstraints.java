@@ -159,6 +159,11 @@ public class SqlConstraints
       return in(lhs, StringUtils.join(values, ","));
     }
   }
+  
+  public static String any(String lhs, String rhs)
+  {
+    return lhs + " = ANY (" + rhs + ")";
+  }
 
   public static String sqlString(String string)
   {

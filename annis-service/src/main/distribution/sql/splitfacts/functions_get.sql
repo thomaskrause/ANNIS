@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION getComponentType("type" char, namespace varchar, 
   "name" varchar, toplevel_corpus integer[]) 
-RETURNS smallint AS $f$
-SELECT id 
+RETURNS smallint[] AS $f$
+SELECT array_agg(id) 
 FROM component_type 
 WHERE 
   "type" = $1 AND
@@ -14,14 +14,12 @@ $f$ LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION getComponentTypeNameOnly("type" char, 
   "name" varchar, toplevel_corpus integer[]) 
-RETURNS smallint AS $f$
-SELECT id 
+RETURNS smallint[] AS $f$
+SELECT array_agg(id) 
 FROM component_type 
 WHERE 
   "type" = $1 AND
   name IS NOT DISTINCT FROM $2 AND
   toplevel_corpus = ANY($3)
-LIMIT 1
 ;
 $f$ LANGUAGE SQL IMMUTABLE;
-

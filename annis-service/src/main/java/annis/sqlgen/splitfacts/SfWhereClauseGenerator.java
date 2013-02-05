@@ -20,6 +20,7 @@ import annis.ql.parser.QueryData;
 import annis.sqlgen.DefaultWhereClauseGenerator;
 import annis.sqlgen.WhereClauseSqlGenerator;
 import java.util.List;
+import static annis.sqlgen.SqlConstraints.any;
 import static annis.sqlgen.SqlConstraints.in;
 import static annis.sqlgen.SqlConstraints.join;
 import static annis.sqlgen.SqlConstraints.sqlString;
@@ -39,15 +40,14 @@ public class SfWhereClauseGenerator extends DefaultWhereClauseGenerator
   protected void addComponentPredicates(List<String> conditions, QueryNode node,
     String edgeType, String componentName,  List<Long> corpora)
   {
-    conditions.add(
-      join("=", 
-      tables(node).aliasedColumn(TableAccessStrategy.RANK_TABLE, "type_ref"), 
-      "getComponentTypeNameOnly(" + sqlString(edgeType) + ", " 
-        + (componentName == null ? "NULL" : sqlString(componentName)) + ", "
-        + "ARRAY[" + StringUtils.join(corpora, ", ") + "]"
-        + ")"
-      )
-    );    
+    conditions.
+      add(
+      any(tables(node).aliasedColumn(TableAccessStrategy.RANK_TABLE, "type_ref"),
+      "getComponentTypeNameOnly(" + sqlString(edgeType) + ", "
+      + (componentName == null ? "NULL" : sqlString(componentName)) + ", "
+      + "ARRAY[" + StringUtils.join(corpora, ", ") + "]"
+      + ")"));
+    
   }
 
   @Override
