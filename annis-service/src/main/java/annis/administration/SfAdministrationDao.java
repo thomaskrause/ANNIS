@@ -179,8 +179,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.info("adjusting component id");
     executeSqlFromScript("adjustcomponentid.sql");
     log.debug("analyzing _component and _rank");
-    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("component"));
-    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("rank"));
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("component"));
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("rank"));
   }
 
   protected void adjustNodeId()
@@ -188,36 +188,36 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.info("adjusting node id");
     executeSqlFromScript("adjustnodeid.sql");
     log.debug("analyzing _node, _node_annotation and _rank");
-    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node"));
-    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("node_annotation"));
-    getJdbcTemplate().execute("ANALYZE " + tableInStagingArea("rank"));
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("node"));
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("node_annotation"));
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE " + tableInStagingArea("rank"));
   }
   
   @Override
   void analyzeFacts(long corpusID)
   {
-    log.info("analyzing and shrinking imported tables for corpus with ID " + corpusID);
+    log.info("analyzing newly imported tables for corpus with ID " + corpusID);
     
     log.debug("analyzing node table for corpus with ID " + corpusID);
     getJdbcTemplate().execute("ALTER TABLE facts_node_" + corpusID + " ALTER COLUMN span SET STATISTICS 200");
     
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_node_" + corpusID);
+    getJdbcTemplate().execute("ANALYZE facts_node_" + corpusID);
 
     log.debug("analyzing node_annotation table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_edge_" + corpusID);
+    getJdbcTemplate().execute("ANALYZE facts_edge_" + corpusID);
 
     log.debug("analyzing component_type table for corpus with ID " + corpusID);
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type_" + corpusID);
+    getJdbcTemplate().execute("ANALYZE component_type_" + corpusID);
     
     // general parent tables
     log.debug("analyzing general node table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_edge");
+    getJdbcTemplate().execute("ANALYZE facts_edge");
     
     log.debug("analyzing general node_annotation table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE facts_node");
+    getJdbcTemplate().execute("ANALYZE facts_node");
 
     log.debug("analyzing general component_type table");
-    getJdbcTemplate().execute("VACUUM FULL ANALYZE component_type");
+    getJdbcTemplate().execute("ANALYZE component_type");
   }
 
   @Override
@@ -238,6 +238,8 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     log.debug("recursivly deleting corpora: " + ids);
     executeSqlFromScript("delete_corpus.sql", makeArgs().addValue(":ids",
       StringUtils.join(ids, ", ")));
+    
+    getJdbcTemplate().execute("VACUUM FULL ANALYZE corpus");
   }
 
   @Override

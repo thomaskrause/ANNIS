@@ -709,7 +709,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     log.info("adjusting pre and post order in _rank");
     executeSqlFromScript("adjustrankprepost.sql");
     log.debug("analyzing _rank");
-    jdbcTemplate.execute("ANALYZE " + tableInStagingArea("rank"));
+    jdbcTemplate.execute("VACUUM FULL ANALYZE " + tableInStagingArea("rank"));
   }
   
   protected void adjustTextId()
@@ -718,7 +718,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     executeSqlFromScript("adjusttextid.sql");
     log.debug("analyzing _node and _text");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("text"));
-    jdbcTemplate.execute("ANALYZE " + tableInStagingArea("node"));
+    jdbcTemplate.execute("VACCUUM FULL ANALYZE " + tableInStagingArea("node"));
   }
 
   /**
