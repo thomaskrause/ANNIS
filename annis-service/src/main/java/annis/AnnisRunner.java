@@ -63,6 +63,7 @@ import annis.ql.parser.QueryData;
 import annis.service.objects.AnnisAttribute;
 import annis.service.objects.AnnisCorpus;
 import annis.service.objects.Match;
+import annis.service.objects.MatchAndDocumentCount;
 import annis.service.objects.SaltURIGroup;
 import annis.service.objects.SaltURIGroupSet;
 import annis.sqlgen.AnnotateQueryData;
@@ -267,8 +268,8 @@ public class AnnisRunner extends AnnisBaseRunner
 
   public void doDebug(String ignore)
   {
-    doCorpus("corpus tiger2");
-    doSql("cat=\"S\"");
+    doCorpus("corpus TueBa-D/Z.6.0");
+    doCount("tok");
   }
 
   public void doParse(String annisQuery)
@@ -858,7 +859,8 @@ public class AnnisRunner extends AnnisBaseRunner
 
   public void doCount(String annisQuery)
   {
-    out.println(annisDao.count(analyzeQuery(annisQuery, "count")));
+    MatchAndDocumentCount c = annisDao.countMatchesAndDocuments(analyzeQuery(annisQuery, "count"));
+    out.println(c.getMatchCount() + " (" + c.getDocumentCount() + " documents)");
   }
 
   public void doMatrix(String annisQuery)

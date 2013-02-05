@@ -46,7 +46,8 @@ import org.slf4j.LoggerFactory;
  */
 public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
   implements SelectClauseSqlGenerator<QueryData>, 
-  OrderByClauseSqlGenerator<QueryData>
+  OrderByClauseSqlGenerator<QueryData>,
+  GroupByClauseSqlGenerator<QueryData>
 {  
   
   private static final Logger log = LoggerFactory.getLogger(FindSqlGenerator.class);
@@ -54,7 +55,7 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
   // optimize DISTINCT operation in SELECT clause
   private boolean optimizeDistinct;
   private boolean sortSolutions;
-  private boolean outputCorpusPath;
+  private boolean verboseOutput;
   private CorpusPathExtractor corpusPathExtractor;
 
   @Override
@@ -65,10 +66,11 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
     Validate.isTrue(alternative.size() <= maxWidth,
       "BUG: nodes.size() > maxWidth");
 
-    boolean isDistinct = false || !optimizeDistinct;
     List<String> ids = new ArrayList<String>();
     int i = 0;
 
+    boolean addDistinct = distinctNeeded(alternative);
+    
     for (QueryNode node : alternative)
     {
       ++i;
@@ -76,18 +78,26 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
       TableAccessStrategy tblAccessStr = tables(node);
       ids.add(tblAccessStr.aliasedColumn(NODE_TABLE, "id") + " AS id" + i);
       ids.add(tblAccessStr.aliasedColumn(NODE_TABLE, "corpus_ref") + " AS corpus" + i);
-      ids.add(tblAccessStr.aliasedColumn(NODE_TABLE, "name")
-        + " AS node_name" + i);
-      if(outputCorpusPath)
+      if(verboseOutput)
       {
-        ids.add(tblAccessStr.aliasedColumn(CORPUS_TABLE, "path_name")
-          + " AS path_name" + i);
+        if(addDistinct)
+        {
+          ids.add("min(" + tblAccessStr.aliasedColumn(NODE_TABLE, "name")
+            + ") AS node_name" + i);
+
+          ids.add("min(" + tblAccessStr.aliasedColumn(CORPUS_TABLE, "path_name")
+            + ") AS path_name" + i);
+        }
+        else
+        {
+          ids.add(tblAccessStr.aliasedColumn(NODE_TABLE, "name")
+            + " AS node_name" + i);
+
+          ids.add(tblAccessStr.aliasedColumn(CORPUS_TABLE, "path_name")
+            + " AS path_name" + i);
+        }
       }
-      if (tblAccessStr.usesRankTable())
-      {
-        isDistinct = true;
-      }
-    }
+    } // end for each output node
 
     for (i = alternative.size(); i < maxWidth; ++i)
     {
@@ -95,14 +105,25 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
     }
 
     ids.add(tables(alternative.get(0)).aliasedColumn(NODE_TABLE,
-      "toplevel_corpus"));
-
-    ids.add(tables(alternative.get(0)).aliasedColumn(NODE_TABLE,
       "corpus_ref"));
 
-
-    return (isDistinct ? "DISTINCT" : "") + "\n" + indent + TABSTOP
-      + StringUtils.join(ids, ", ");
+    
+    if(verboseOutput)
+    {
+      if(addDistinct)
+      {
+        ids.add("min(" + tables(alternative.get(0)).aliasedColumn(NODE_TABLE,
+          "toplevel_corpus") + ")");
+      }
+      else
+      {
+        ids.add(tables(alternative.get(0)).aliasedColumn(NODE_TABLE,
+          "toplevel_corpus"));
+      }
+    } //
+    
+    return "\n" + indent + TABSTOP
+      + StringUtils.join(ids, ",\n" + indent + TABSTOP);
   }
   
   @Override
@@ -131,9 +152,46 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
     List<String> ids = new ArrayList<String>();
     for (int i = 1; i <= queryData.getMaxWidth(); ++i)
     {
+      ids.add("corpus" + i);
       ids.add("id" + i);
     }
     return StringUtils.join(ids, ", ");
+  }
+
+  @Override
+  public String groupByAttributes(QueryData queryData,
+    List<QueryNode> alternative)
+  {
+    
+    if(distinctNeeded(alternative))
+    {
+      List<String> ids = new ArrayList<String>();
+      for (int i = 1; i <= queryData.getMaxWidth(); ++i)
+      {
+        ids.add("corpus" + i);
+        ids.add("id" + i);
+      }
+      return StringUtils.join(ids, ", ");
+    }
+    else
+    {
+      return "";
+    }
+  }
+  
+  private boolean distinctNeeded(List<QueryNode> alternative)
+  {
+    boolean result = false || !optimizeDistinct;
+    
+    for (QueryNode node : alternative)
+    {
+      if(tables(node).usesRankTable())
+      {
+        result = true;
+        break;
+      }
+    }
+    return result;
   }
 
   @Override
@@ -163,7 +221,7 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
     List<String> corpus_path = null;
 
     //get path
-    if(outputCorpusPath)
+    if(verboseOutput)
     {
       for (int column = 1; column <= columnCount; ++column)
       {
@@ -189,7 +247,7 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
         break;
       }
 
-      if (outputCorpusPath && node_name != null)
+      if (verboseOutput && node_name != null)
       {
         match.setSaltId(buildSaltId(corpus_path, node_name));
         node_name = null;
@@ -252,17 +310,14 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator<List<Match>>
     this.sortSolutions = sortSolutions;
   }
 
-  public boolean isOutputCorpusPath()
+  public boolean isVerboseOutput()
   {
-    return outputCorpusPath;
+    return verboseOutput;
   }
 
-  public void setOutputCorpusPath(boolean outputCorpusPath)
+  public void setVerboseOutput(boolean verboseOutput)
   {
-    this.outputCorpusPath = outputCorpusPath;
+    this.verboseOutput = verboseOutput;
   }
-  
-  
-  
-  
+
 }
