@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS component_type_:id CASCADE;
 DROP TABLE IF EXISTS facts_edge_:id CASCADE;
 DROP TABLE IF EXISTS text_:id CASCADE;
 
-CREATE UNLOGGED TABLE text_:id (
+CREATE TABLE text_:id (
   corpus_ref integer REFERENCES corpus(id),
   toplevel_corpus integer REFERENCES corpus(id),
   PRIMARY KEY (corpus_ref, id),
@@ -14,11 +14,11 @@ CREATE UNLOGGED TABLE text_:id (
 INSERT INTO text_:id (corpus_ref, id, "name", text, toplevel_corpus)
 SELECT corpus_ref, id, "name", text, :id FROM _text;
 
-CREATE UNLOGGED TABLE facts_node_:id (
-  corpus_ref integer REFERENCES corpus(id),
-  toplevel_corpus integer REFERENCES corpus(id),
+CREATE TABLE facts_node_:id (
+  corpus_ref integer REFERENCES corpus(id) DEFERRABLE,
+  toplevel_corpus integer REFERENCES corpus(id) DEFERRABLE,
   PRIMARY KEY(corpus_ref, id, n_na_rownum),
-  FOREIGN KEY (corpus_ref, text_ref) REFERENCES text_:id (corpus_ref, id),
+  FOREIGN KEY (corpus_ref, text_ref) REFERENCES text_:id (corpus_ref, id) DEFERRABLE,
   CHECK(toplevel_corpus = :id)
 ) INHERITS(facts_node);
 
@@ -38,7 +38,7 @@ FROM _node AS n LEFT JOIN _node_annotation AS na ON (n.id = na.node_ref AND n.co
 CREATE TABLE component_type_:id
 (
   id smallint PRIMARY KEY,
-  toplevel_corpus integer REFERENCES corpus(id),
+  toplevel_corpus integer REFERENCES corpus(id) DEFERRABLE,
   UNIQUE("type", namespace, "name"),
   CHECK(toplevel_corpus = :id)
 ) INHERITS(component_type);
@@ -48,10 +48,10 @@ SELECT id, "type", namespace, "name", :id
 FROM _component_type;
 
 --
-CREATE UNLOGGED TABLE facts_edge_:id (
-  corpus_ref integer REFERENCES corpus(id),
-  type_ref smallint REFERENCES component_type_:id (id),
-  toplevel_corpus integer REFERENCES corpus(id),
+CREATE TABLE facts_edge_:id (
+  corpus_ref integer REFERENCES corpus(id) DEFERRABLE,
+  type_ref smallint REFERENCES component_type_:id (id) DEFERRABLE,
+  toplevel_corpus integer REFERENCES corpus(id) DEFERRABLE,
   PRIMARY KEY(corpus_ref, pre, r_ea_rownum),
 
   CHECK(toplevel_corpus = :id)

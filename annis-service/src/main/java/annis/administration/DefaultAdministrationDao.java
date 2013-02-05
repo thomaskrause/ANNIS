@@ -767,6 +767,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     jdbcTemplate.update("UPDATE _corpus_stats SET id = " + corpusId);
   }
   
+  @Transactional(readOnly=false)
   void applyConstraints()
   {
     log.info("activating relational constraints");
@@ -856,6 +857,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     }
   }
   
+  @Transactional(readOnly=false)
   protected void createAnnotations(long corpusID)
   {
     MapSqlParameterSource args = makeArgs().addValue(":id", corpusID);
@@ -923,11 +925,14 @@ public class DefaultAdministrationDao implements AdministrationDao
       jdbcTemplate.execute("DROP TABLE IF EXISTS facts_" + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS facts_edge_" + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS component_type_" + l);
-      jdbcTemplate.execute("DROP TABLE IF EXISTS facts_node_" + l);
+      jdbcTemplate.execute("DROP TABLE IF EXISTS facts_node_" + l);      
+      jdbcTemplate.execute("DROP TABLE IF EXISTS text_" + l);
       log.debug("dropping annotation_pool table for corpus " + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS annotation_pool_" + l);
       log.debug("dropping annotations table for corpus " + l);
       jdbcTemplate.execute("DROP TABLE IF EXISTS annotations_" + l);
+      
+      // get pre and post from the 
     }
     
     log.debug("recursivly deleting corpora: " + ids);
