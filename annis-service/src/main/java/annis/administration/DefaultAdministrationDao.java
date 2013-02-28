@@ -722,7 +722,7 @@ public class DefaultAdministrationDao implements AdministrationDao
     executeSqlFromScript("adjusttextid.sql");
     log.debug("analyzing _node and _text");
     jdbcTemplate.execute("ANALYZE " + tableInStagingArea("text"));
-    jdbcTemplate.execute("VACCUUM FULL ANALYZE " + tableInStagingArea("node"));
+    jdbcTemplate.execute("ANALYZE " + tableInStagingArea("node"));
   }
 
   /**
