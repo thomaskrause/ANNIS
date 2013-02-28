@@ -102,6 +102,11 @@ public class CorpusAdministration
     }
     return true;
   }
+  
+  public void exportCorpus(long id, String outputPath)
+  {
+    administrationDao.exportCorpus(id, outputPath);
+  }
 
   public void importCorpora(String... paths)
   {

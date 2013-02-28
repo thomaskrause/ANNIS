@@ -77,25 +77,20 @@ public class AnnisAdminRunner extends AnnisBaseRunner
     {
       usage(null);
 
-      // command: init
     }
     else if ("init".equals(command))
     {
       doInit(commandArgs);
 
-      // command: import
     }
     else if ("import".equals(command))
     {
       doImport(commandArgs);
 
-      // command: delete
     }
     else if ("delete".equals(command))
     {
       doDelete(commandArgs);
-
-      // command status
     }
     else if ("list".equals(command))
     {
@@ -104,8 +99,10 @@ public class AnnisAdminRunner extends AnnisBaseRunner
     else if ("indexes".equals(command))
     {
       doIndexes();
-
-      // unknown command
+    }
+    else if("export".equals(command))
+    {
+      doExport(commandArgs);
     }
     else
     {
@@ -305,6 +302,15 @@ public class AnnisAdminRunner extends AnnisBaseRunner
       }
     }
     corpusAdministration.deleteCorpora(ids);
+  }
+  
+  private void doExport(List<String> commandArgs)
+  {
+    if (commandArgs.size() != 2)
+    {
+      throw new UsageException("For export a single corpus ID and an output path is expected");
+    }
+    corpusAdministration.exportCorpus(Long.parseLong(commandArgs.get(0)), commandArgs.get(1));
   }
 
   private void doList()

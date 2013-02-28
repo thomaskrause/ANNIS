@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import static annis.sqlgen.SqlConstraints.sqlString;
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,14 +45,33 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     // do nothing
   }
 
-//  @Override
-//  void computeLevel()
-//  {
-//    // make sure to make the _rank table as small as possible
-//    log.info("shrinking _rank table");
-//    getJdbcTemplate().execute("VACUUM FULL " + tableInStagingArea("rank") +  ";");
-//    super.computeLevel();
-//  }
+  //  @Override
+  //  void computeLevel()
+  //  {
+  //    // make sure to make the _rank table as small as possible
+  //    log.info("shrinking _rank table");
+  //    getJdbcTemplate().execute("VACUUM FULL " + tableInStagingArea("rank") +  ";");
+  //    super.computeLevel();
+  //  }
+  @Override
+  @Transactional(readOnly = false)
+  public void exportCorpus(long id, String outputPath)
+  {
+    MapSqlParameterSource param = new MapSqlParameterSource();
+    param.addValue(":id", id);
+    log.info("Exporting corpus with id " + id + " to temporary tables.");
+    executeSqlFromScript(getDbLayout() + "/export.sql", param);
+    
+    // copy the created tables to database files
+    File parent = new File(outputPath);
+    if(parent.isDirectory() || parent.mkdirs())
+    {
+      storeTableToResource("_export_corpus", new File(parent, "corpus.tab"));
+      storeTableToResource("_export_corpus_annotation", new File(parent, "corpus_annotation.tab"));
+    }
+    
+  }
+  
   
   
 

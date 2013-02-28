@@ -37,6 +37,8 @@ public interface AdministrationDao
     String superPassword);
   public void importCorpus(String path);
   
+  public void exportCorpus(long id, String outputPath);
+  
   public List<Map<String, Object>> listCorpusStats();
   public List<String> listUsedIndexes();
   public List<String> listUnusedIndexes();

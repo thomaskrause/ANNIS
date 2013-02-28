@@ -28,14 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -291,6 +289,12 @@ public class DefaultAdministrationDao implements AdministrationDao
     // why is this better?
     // XXX: how to construct the datasource?    
     return new SimpleDriverDataSource(new Driver(), url, user, password);
+  }
+
+  @Override
+  public void exportCorpus(long id, String outputPath)
+  {
+    throw new UnsupportedOperationException("Not supported in this database scheme"); 
   }
 
   
@@ -1133,8 +1137,10 @@ public class DefaultAdministrationDao implements AdministrationDao
     }
   }
 
-  // bulk-loads a table from a resource
-  private void bulkloadTableFromResource(String table, Resource resource)
+  /** 
+   * Bulk-loads a table from a resource. 
+   */
+  protected void bulkloadTableFromResource(String table, Resource resource)
   {
     log.debug("bulk-loading data from '" + resource.getFilename()
       + "' into table '" + table + "'");
@@ -1162,7 +1168,38 @@ public class DefaultAdministrationDao implements AdministrationDao
       throw new FileAccessException(e);
     }
   }
-
+  
+  /** 
+   * stores a table to a resource. 
+   */
+  protected void storeTableToResource(String table, File out)
+  {
+    log.info("storing data to '" + out.getAbsolutePath()
+      + "' from table '" + table + "'");
+    String sql = "COPY " + table
+      + " TO STDOUT WITH (DELIMITER E'\t', NULL 'NULL')";
+    
+    try
+    {
+      // retrieve the currently open connection if running inside a transaction
+      Connection con = DataSourceUtils.getConnection(dataSource);
+      // Postgres JDBC4 8.4 driver now supports the copy API
+      PGConnection pgCon = (PGConnection) con;
+      pgCon.getCopyAPI().copyOut(sql, new FileOutputStream(out));
+      
+      DataSourceUtils.releaseConnection(con, dataSource);
+      
+    }
+    catch (SQLException e)
+    {
+      throw new DatabaseAccessException(e);
+    }
+    catch (IOException e)
+    {
+      throw new FileAccessException(e);
+    }
+  }
+  
   // get a list of indexes on the imported Snd created tables tables which are not
   // auto-created by postgres (namely, primary key and unique constraints)
   // exploits the fact that the index has the same name as the constraint
