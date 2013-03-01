@@ -1174,7 +1174,7 @@ public class DefaultAdministrationDao implements AdministrationDao
    */
   protected void storeTableToResource(String table, File out)
   {
-    log.info("storing data to '" + out.getAbsolutePath()
+    log.debug("storing data to '" + out.getAbsolutePath()
       + "' from table '" + table + "'");
     String sql = "COPY " + table
       + " TO STDOUT WITH (DELIMITER E'\t', NULL 'NULL')";

@@ -25,8 +25,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import static annis.sqlgen.SqlConstraints.sqlString;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -93,9 +96,29 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     File parent = new File(outputPath);
     if(parent.isDirectory() || parent.mkdirs())
     {
-      storeTableToResource("_export_corpus", new File(parent, "corpus.tab"));
-      storeTableToResource("_export_corpus_annotation", new File(parent, "corpus_annotation.tab"));
-      storeTableToResource("_export_text", new File(parent, "text.tab"));
+      log.info("Writing relannis files");
+      storeTableToResource("_export_corpus", new File(parent, "corpus.relannis"));
+      storeTableToResource("_export_corpus_annotation", new File(parent, "corpus_annotation.relannis"));
+      storeTableToResource("_export_text", new File(parent, "text.relannis"));
+      storeTableToResource("_export_node", new File(parent, "node.relannis"));
+      storeTableToResource("_export_component", new File(parent, "component.relannis"));
+      storeTableToResource("_export_rank", new File(parent, "rank.relannis"));
+      storeTableToResource("_export_node_annotation", new File(parent, "node_annotation.relannis"));
+      storeTableToResource("_export_edge_annotation", new File(parent, "edge_annotation.relannis"));
+      storeTableToResource("_export_resolver_vis_map", new File(parent, "resolver_vis_map.relannis"));
+      storeTableToResource("_export_media_files", new File(parent, "media_files.relannis"));
+      
+      // make the special version file
+      log.info("Writing version file");
+      try
+      {
+        FileUtils.writeStringToFile(new File(parent, "relannis.version"), "4.0");
+      }
+      catch (IOException ex)
+      {
+        log.error(null, ex);
+      }
+      
     }
     
   }
