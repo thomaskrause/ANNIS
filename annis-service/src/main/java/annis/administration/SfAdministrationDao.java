@@ -59,6 +59,33 @@ public class SfAdministrationDao extends DefaultAdministrationDao
   {
     MapSqlParameterSource param = new MapSqlParameterSource();
     param.addValue(":id", id);
+    
+    log.info("Collecting informations about the IDs.");
+    SqlRowSet minidsRowSet = getJdbcTemplate().queryForRowSet(
+      "SELECT min(child.id) minid, min(child.pre) AS minpre\n" +
+      "FROM corpus AS top, corpus AS child\n" +
+      "WHERE\n" +
+      "  top.id= ? AND\n" +
+      "  top.pre <= child.pre AND child.post <= top.post", id);
+    
+    if(minidsRowSet.first())
+    {
+      param.addValue(":minid", minidsRowSet.getInt("minid"));
+      param.addValue(":minpre", minidsRowSet.getInt("minpre"));
+    }
+    
+    SqlRowSet topInfoRowSet = getJdbcTemplate().queryForRowSet(
+      "SELECT pre, post\n" +
+      "FROM corpus\n" +
+      "WHERE\n" +
+      "  id= ?", id);
+    
+    if(topInfoRowSet.first())
+    {
+      param.addValue(":toppre", topInfoRowSet.getInt("pre"));
+      param.addValue(":toppost", topInfoRowSet.getInt("post"));
+    }
+    
     log.info("Exporting corpus with id " + id + " to temporary tables.");
     executeSqlFromScript(getDbLayout() + "/export.sql", param);
     
@@ -68,6 +95,7 @@ public class SfAdministrationDao extends DefaultAdministrationDao
     {
       storeTableToResource("_export_corpus", new File(parent, "corpus.tab"));
       storeTableToResource("_export_corpus_annotation", new File(parent, "corpus_annotation.tab"));
+      storeTableToResource("_export_text", new File(parent, "text.tab"));
     }
     
   }

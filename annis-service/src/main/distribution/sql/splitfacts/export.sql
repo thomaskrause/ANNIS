@@ -1,41 +1,35 @@
 DROP TABLE IF EXISTS _export_corpus;
-CREATE TABLE _export_corpus AS
+CREATE TEMPORARY TABLE _export_corpus AS
 (
-  WITH info AS
-  (
-    SELECT min(child.id) minid, min(child.pre) AS minpre
-    FROM corpus AS top, corpus AS child
-    WHERE
-      top.id= :id AND
-      top.pre <= child.pre AND child.post <= top.post
-  )
-  SELECT c.id - minid AS id, c."name", c.type, c.version, c.pre - minpre AS pre, c.post - minpre AS post
-  FROM corpus AS c, corpus AS top, info
+  SELECT id - :minid AS id, "name", type, version, pre - :minpre AS pre, post - :minpre AS post
+  FROM corpus
   WHERE
-    c.pre >= top.pre AND c.post <= top.post AND
-    top.id = :id
+    pre >= :toppre AND post <= :toppost
   ORDER BY id
+);
+
+DROP TABLE IF EXISTS _export_corpus_annotation;
+CREATE TEMPORARY TABLE _export_corpus_annotation
+AS 
+(
+  SELECT anno.corpus_ref - :minid AS corpus_ref, anno."namespace", anno."name", anno."value"
+  FROM corpus_annotation AS anno, corpus AS child
+  WHERE
+    child.pre >= :toppre AND child.post <= :toppost AND
+    anno.corpus_ref = child.id
+  ORDER BY corpus_ref
 )
 ;
 
-DROP TABLE IF EXISTS _export_corpus_annotation;
-CREATE TABLE _export_corpus_annotation
+DROP TABLE IF EXISTS _export_text;
+CREATE TEMPORARY TABLE _export_text
 AS 
 (
-  WITH info AS
-  (
-    SELECT min(child.id) minid
-    FROM corpus AS top, corpus AS child
-    WHERE
-      top.id= :id AND
-      top.pre <= child.pre AND child.post <= top.post
-  )
-  SELECT anno.corpus_ref - minid AS corpus_ref, anno."namespace", anno."name", anno."value"
-  FROM corpus_annotation AS anno, corpus AS child, corpus AS top, info
+
+  SELECT corpus_ref - :minid AS corpus_ref, id AS id, "name" AS "name", "text" AS "text"
+  FROM text AS t
   WHERE
-    child.pre >= top.pre AND child.post <= top.post AND
-    top.id = :id AND
-    anno.corpus_ref = child.id
-  ORDER BY corpus_ref
+    toplevel_corpus = :id
+  ORDER BY corpus_ref, id
 )
 ;
