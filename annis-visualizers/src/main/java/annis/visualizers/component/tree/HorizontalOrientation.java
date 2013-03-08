@@ -15,7 +15,9 @@
  */
 package annis.visualizers.component.tree;
 
+import annis.model.AnnisConstants;
 import annis.model.AnnisNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import java.util.Comparator;
 
 public enum HorizontalOrientation {
@@ -28,11 +30,16 @@ public enum HorizontalOrientation {
 		directionModifier = directionModifier_;
 	}
 	
-	Comparator<AnnisNode> getComparator() {
-		return new Comparator<AnnisNode>() {
+	Comparator<SNode> getComparator() {
+		return new Comparator<SNode>() {
 			@Override
-			public int compare(AnnisNode o1, AnnisNode o2) {
-				return directionModifier * (o1.getTokenIndex().intValue() - o2.getTokenIndex().intValue());
+			public int compare(SNode o1, SNode o2) {
+				return (int) 
+        (
+          (long) directionModifier * 
+          (o1.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_TOKENINDEX).getSValueSNUMERIC() 
+          - o2.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_TOKENINDEX).getSValueSNUMERIC())
+        );
 			}
 		};	
 	}

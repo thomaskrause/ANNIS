@@ -16,9 +16,12 @@
 package annis.visualizers.component.tree;
 
 import annis.libgui.visualizers.VisualizerInput;
+import annis.model.AnnisConstants;
 import annis.visualizers.component.tree.GraphicsBackend.Alignment;
-import annis.model.AnnisNode;
-import annis.model.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.awt.geom.CubicCurve2D;
@@ -35,17 +38,17 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		
 		private T parentItem;
 		
-		private final Map<AnnisNode, Double> positions;
+		private final Map<SNode, Double> positions;
 		private final VerticalOrientation orientation;
 		private final List<Line2D> lines = new ArrayList<Line2D>(); 
 		private final OrderedNodeList nodeList = new OrderedNodeList(styler.getVEdgeOverlapThreshold());
-		private final Map<AnnisNode, Rectangle2D> rectangles = new HashMap<AnnisNode, Rectangle2D>();
+		private final Map<SNode, Rectangle2D> rectangles = new HashMap<SNode, Rectangle2D>();
 		
 		public void setBaseline(double baseline) {
 			this.baseline = baseline;
 		}
 
-		public TreeLayoutData(VerticalOrientation orientation_, Map<AnnisNode, Double> positions_) {
+		public TreeLayoutData(VerticalOrientation orientation_, Map<SNode, Double> positions_) {
 			positions = positions_;
 			orientation = orientation_;
 		}
@@ -54,11 +57,11 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			return orientation;
 		}
 
-		public double getYPosition(AnnisNode node) {
+		public double getYPosition(SNode node) {
 			return ntStart - orientation.value * dataMap.get(node).getHeight() * styler.getHeightStep();
 		}
 		
-		public Point2D getTokenPosition(AnnisNode terminal) {
+		public Point2D getTokenPosition(SNode terminal) {
 			return new Point2D.Double(positions.get(terminal), baseline);
 		}
 
@@ -66,12 +69,12 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			getLines().add(new Line2D.Double(from, to));
 		}
 		
-		public void addNodeRect(AnnisNode node, Rectangle2D nodeRect) {
+		public void addNodeRect(SNode node, Rectangle2D nodeRect) {
 			rectangles.put(node, nodeRect);
 		}
 		
-		public Point2D getDominanceConnector(AnnisNode node, Rectangle2D bounds) {
-			if (node.isToken()) {
+		public Point2D getDominanceConnector(SNode node, Rectangle2D bounds) {
+			if (node instanceof SToken) {
 				return new Point2D.Double(bounds.getCenterX(), (orientation == VerticalOrientation.TOP_ROOT) ? bounds.getMinY() : bounds.getMaxY()); 
 			} else {
 				return new Point2D.Double(bounds.getCenterX(), bounds.getCenterY());
@@ -102,26 +105,22 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			return nodeList;
 		}
 
-		public Rectangle2D getRect(AnnisNode source) {
+		public Rectangle2D getRect(SNode source) {
 			return rectangles.get(source);
 		}
 	}
 	
-	private static final AnnisNode TOKEN_NODE = new AnnisNode();
+	private static final SToken TOKEN_NODE = SaltFactory.eINSTANCE.createSToken();
 
-	static {
-		TOKEN_NODE.setToken(true);
-	}
-	
-	private final DirectedGraph<AnnisNode,Edge> graph;
-	private final AnnisNode root;
+	private final DirectedGraph<SNode,SDominanceRelation> graph;
+	private final SNode root;
 	private final TreeElementLabeler labeler;
 	private final GraphicsBackend<T> backend;
-	private final Map<AnnisNode, NodeStructureData> dataMap;
+	private final Map<SNode, NodeStructureData> dataMap;
 	private final TreeElementStyler styler;
     private final VisualizerInput input;
 	
-	public ConstituentLayouter(DirectedGraph<AnnisNode, Edge> graph_, 
+	public ConstituentLayouter(DirectedGraph<SNode, SDominanceRelation> graph_, 
       GraphicsBackend<T> backend_, TreeElementLabeler labeler_, TreeElementStyler styler_,
       VisualizerInput input_) {
 		this.backend = backend_;
@@ -131,18 +130,18 @@ public class ConstituentLayouter<T extends GraphicsItem> {
         this.input = input_;
 		root = findRoot();
 		
-		dataMap = new HashMap<AnnisNode, NodeStructureData>();
+		dataMap = new HashMap<SNode, NodeStructureData>();
 		fillHeightMap(root, 0, null);
 		adaptNodeHeights();
 	}
 
-	private NodeStructureData fillHeightMap(AnnisNode node, int height, NodeStructureData parent) {
-		if (node.isToken()) {
+	private NodeStructureData fillHeightMap(SNode node, int height, NodeStructureData parent) {
+		if (node instanceof SToken) {
 			NodeStructureData structureData = new NodeStructureData(parent);
 			structureData.setChildHeight(0);
 			structureData.setTokenArity(1);
-			structureData.setLeftCorner(node.getTokenIndex().longValue());
-			structureData.setRightCorner(node.getTokenIndex().longValue());
+			structureData.setLeftCorner(node.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_TOKENINDEX).getSValueSNUMERIC());
+			structureData.setRightCorner(node.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_TOKENINDEX).getSValueSNUMERIC());
 			dataMap.put(node, structureData);
 			return structureData;
 		} else {
@@ -155,14 +154,14 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			int tokenArity = 0;
 			int arity = 0;
 			NodeStructureData structureData = new NodeStructureData(parent);
-			for (AnnisNode n: graph.getSuccessors(node)) {
+			for (SNode n: graph.getSuccessors(node)) {
 				NodeStructureData childData = fillHeightMap(n, height + 1, structureData); 
 				maxH = Math.max(childData.getHeight(), maxH);
 				leftCorner = Math.min(childData.getLeftCorner(), leftCorner);
 				rightCorner = Math.max(childData.getRightCorner(), rightCorner);
 				tokenArity += childData.getTokenArity();
 				arity += 1;
-				if (n.isToken()) {
+				if (n instanceof SToken) {
 					hasTokenChildren = true;
 					leftmostImmediate = Math.min(leftmostImmediate, childData.getLeftCorner());
 					rightmostImmediate = Math.max(rightmostImmediate, childData.getLeftCorner());
@@ -209,8 +208,8 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		 */
 		List<NodeStructureData> allNonterminals = new ArrayList<NodeStructureData>();
 		boolean allContinuous = true;
-		for (AnnisNode n: this.graph.getVertices()) {
-			if (!n.isToken()) {
+		for (SNode n: this.graph.getVertices()) {
+			if (!(n instanceof SToken)) {
 				allNonterminals.add(dataMap.get(n));
 				allContinuous &= dataMap.get(n).isContinuous();
 			}
@@ -291,8 +290,8 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		return levelNodes.size();
 	}
 
-	private AnnisNode findRoot() {
-		for (AnnisNode n: graph.getVertices()) {
+	private SNode findRoot() {
+		for (SNode n: graph.getVertices()) {
 			if (graph.getInEdges(n).isEmpty()) {
 				return n;
 			}
@@ -305,10 +304,10 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		return (dataMap.get(root).getHeight()) * styler.getHeightStep() + styler.getFont(TOKEN_NODE).getLineHeight() / 2;
 	}
 	
-	private List<AnnisNode> getTokens(LayoutOptions options) {
-		List<AnnisNode> tokens = new ArrayList<AnnisNode>();
-		for (AnnisNode n: graph.getVertices()) {
-			if (n.isToken()) {
+	private List<SNode> getTokens(LayoutOptions options) {
+		List<SNode> tokens = new ArrayList<SNode>();
+		for (SNode n: graph.getVertices()) {
+			if (n instanceof SToken) {
 				tokens.add(n);
 			}
 		}
@@ -316,15 +315,15 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		return tokens;
 	}
 	
-	private Map<AnnisNode, Double> computeTokenPositions(LayoutOptions options, int padding) {
-		Map<AnnisNode, Double> positions = new HashMap<AnnisNode, Double>();
+	private Map<SNode, Double> computeTokenPositions(LayoutOptions options, int padding) {
+		Map<SNode, Double> positions = new HashMap<SNode, Double>();
 		double x = 0;
 		boolean first = true;
 		
-		List<AnnisNode> leaves = getTokens(options);
+		List<SNode> leaves = getTokens(options);
 		GraphicsBackend.Font tokenFont = styler.getFont(leaves.get(0));
 		
-		for (AnnisNode token: leaves) {
+		for (SNode token: leaves) {
 			if (first) {
 				first = false;
 			} else {
@@ -337,7 +336,8 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 	}
 	
 	public T createLayout(LayoutOptions options) {
-		TreeLayoutData treeLayout = new TreeLayoutData(options.getOrientation(), computeTokenPositions(options, 5));
+		TreeLayoutData treeLayout = 
+      new TreeLayoutData(options.getOrientation(), computeTokenPositions(options, 5));
 		
 		treeLayout.setParentItem(backend.group());
 		if (options.getOrientation() == VerticalOrientation.TOP_ROOT) {
@@ -348,7 +348,7 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			treeLayout.setNtStart(styler.getFont(TOKEN_NODE).getLineHeight());
 		}
 		calculateNodePosition(root, treeLayout, options);
-		Edge e = getOutgoingEdges(root).get(0);
+		SDominanceRelation e = getOutgoingEdges(root).get(0);
 		GraphicsItem edges = backend.makeLines(treeLayout.getLines(), 
       styler.getEdgeColor(e, input), styler.getStroke(e, input));
 		edges.setZValue(-4);
@@ -357,14 +357,15 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		return treeLayout.getParentItem();
 	}
 
-	private Point2D calculateNodePosition(final AnnisNode current, TreeLayoutData treeLayout, LayoutOptions options) {
+	private Point2D calculateNodePosition(final SNode current, 
+    TreeLayoutData treeLayout, LayoutOptions options) {
 		double y = treeLayout.getYPosition(current);
 		
 		List<Double> childPositions = new ArrayList<Double>();
-		for (Edge e: getOutgoingEdges(current)) {
-			AnnisNode child = graph.getOpposite(current, e);
+		for (SDominanceRelation e: getOutgoingEdges(current)) {
+			SNode child = graph.getOpposite(current, e);
 			Point2D childPos;
-			if (child.isToken()) {
+			if (child instanceof SToken) {
 				childPos = addTerminalNode(child, treeLayout);
 			} else {
 				childPos = calculateNodePosition(child, treeLayout, options);
@@ -393,7 +394,7 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 
 		GraphicsItem label = backend.makeLabel(
 				labeler.getLabel(current, input), new Point2D.Double(xCenter, y), 
-				styler.getFont(current), styler.getTextBrush(current, input), 
+				styler.getFont(current), styler.getTextBrush(current), 
         Alignment.CENTERED, styler.getShape(current, input));
 		treeLayout.addNodeRect(current, label.getBounds());
 		
@@ -403,25 +404,26 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		return treeLayout.getDominanceConnector(current, label.getBounds());
 	}
 
-	private Point2D addTerminalNode(AnnisNode terminal, TreeLayoutData treeLayout) {
+	private Point2D addTerminalNode(SNode terminal, TreeLayoutData treeLayout) {
 		GraphicsItem label = backend.makeLabel(
 				labeler.getLabel(terminal, input), treeLayout.getTokenPosition(terminal), styler.getFont(terminal), 
-				styler.getTextBrush(terminal, input), Alignment.NONE, styler.getShape(terminal, input));
+				styler.getTextBrush(terminal), Alignment.NONE, styler.getShape(terminal, input));
 		label.setParentItem(treeLayout.getParentItem());
 		treeLayout.addNodeRect(terminal, label.getBounds());
 		return treeLayout.getDominanceConnector(terminal, label.getBounds());
 	}
 
-	private List<Edge> getOutgoingEdges(final AnnisNode current) {
-		List<Edge> outEdges = new ArrayList<Edge>();
-		for (Edge e: graph.getOutEdges(current)) {
+	private List<SDominanceRelation> getOutgoingEdges(final SNode current) {
+		List<SDominanceRelation> outEdges = new ArrayList<SDominanceRelation>();
+		for (SDominanceRelation e: graph.getOutEdges(current)) 
+    {
 			if (AnnisGraphTools.hasEdgeSubtype(e, AnnisGraphTools.PRIMEDGE_SUBTYPE, input)) {
 				outEdges.add(e);
 			}
 		}
-		Collections.sort(outEdges, new Comparator<Edge>() {
+		Collections.sort(outEdges, new Comparator<SDominanceRelation>() {
 			@Override
-			public int compare(Edge o1, Edge o2) {
+			public int compare(SDominanceRelation o1, SDominanceRelation o2) {
 				int h1 = dataMap.get(graph.getOpposite(current, o1)).getHeight();
 				int h2 = dataMap.get(graph.getOpposite(current, o2)).getHeight();
 				return h1 - h2;
@@ -478,15 +480,20 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 	}
 
 	private void addSecEdges(TreeLayoutData treeLayout, LayoutOptions options) {
-		for (Edge e: graph.getEdges()) {
-			if (!AnnisGraphTools.hasEdgeSubtype(e, AnnisGraphTools.SECEDGE_SUBTYPE, input)) {
+		for (SDominanceRelation e: graph.getEdges()) 
+    {
+			if (!(e instanceof SDominanceRelation) 
+        || !AnnisGraphTools.hasEdgeSubtype((SDominanceRelation) e, AnnisGraphTools.SECEDGE_SUBTYPE, input)) {
 				continue;
 			}
-			Rectangle2D sourceRect = treeLayout.getRect(e.getSource());
-			Rectangle2D targetRect = treeLayout.getRect(e.getDestination());
+      
+      SDominanceRelation rel = (SDominanceRelation) e;
+      
+			Rectangle2D sourceRect = treeLayout.getRect(rel.getSSource());
+			Rectangle2D targetRect = treeLayout.getRect(rel.getSTarget());
 			
 			CubicCurve2D curveData = secedgeCurve(treeLayout.getOrientation(), sourceRect, targetRect);
-			T secedgeElem = backend.cubicCurve(curveData, styler.getStroke(e, input), styler.getEdgeColor(e, input));
+			T secedgeElem = backend.cubicCurve(curveData, styler.getStroke(rel, input), styler.getEdgeColor(e, input));
 			secedgeElem.setZValue(-2);
 			
 			T arrowElem = backend.arrow(curveData.getP1(), curveData.getCtrlP1(), new Rectangle2D.Double(0, 0, 8, 8), styler.getEdgeColor(e, input));

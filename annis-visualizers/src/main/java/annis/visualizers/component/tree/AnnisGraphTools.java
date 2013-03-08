@@ -18,7 +18,13 @@ package annis.visualizers.component.tree;
 import annis.libgui.visualizers.VisualizerInput;
 import annis.model.AnnisNode;
 import annis.model.AnnotationGraph;
-import annis.model.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import java.util.ArrayList;
@@ -30,35 +36,40 @@ class AnnisGraphTools
   public static final String PRIMEDGE_SUBTYPE = "edge";
   public static final String SECEDGE_SUBTYPE = "secedge";
 
-  public List<DirectedGraph<AnnisNode, Edge>> getSyntaxGraphs(
+  public List<DirectedGraph<SNode, SDominanceRelation>> getSyntaxGraphs(
     VisualizerInput input)
   {
-    AnnotationGraph ag = input.getResult().getGraph();
+    SDocument result = input.getDocument();
+    
     String namespace = input.getMappings().getProperty("node_ns", input.
       getNamespace());
-    List<DirectedGraph<AnnisNode, Edge>> resultGraphs =
-      new ArrayList<DirectedGraph<AnnisNode, Edge>>();
+    List<DirectedGraph<SNode, SDominanceRelation>> resultGraphs =
+      new ArrayList<DirectedGraph<SNode, SDominanceRelation>>();
 
-    for (AnnisNode n : ag.getNodes())
+    for (SNode n : result.getSDocumentGraph().getSNodes())
     {
       if (isRootNode(n, namespace, input))
       {
-        resultGraphs.add(extractGraph(ag, n, input));
+        resultGraphs.add(extractGraph(result.getSDocumentGraph(), n, input));
       }
     }
     return resultGraphs;
   }
 
-  private boolean copyNode(DirectedGraph<AnnisNode, Edge> graph, AnnisNode n,
+  private boolean copyNode(DirectedGraph<SNode, SDominanceRelation> graph, SNode n,
     VisualizerInput input)
   {
-    boolean addToGraph = n.isToken();
-    for (Edge e : n.getOutgoingEdges())
+    boolean addToGraph = n instanceof SToken;
+    for (Edge e : n.getSGraph().getOutEdges(n.getSId()))
     {
-      if (includeEdge(e, input) && copyNode(graph, e.getDestination(), input))
+      if(e instanceof SDominanceRelation)
       {
-        addToGraph |= true;
-        graph.addEdge(e, n, e.getDestination());
+        SDominanceRelation rel = (SDominanceRelation) e;
+        if (includeEdge(rel, input) && copyNode(graph, rel.getSTarget(), input))
+        {
+          addToGraph |= true;
+          graph.addEdge(rel, n, rel.getSTarget());
+        }
       }
     }
     if (addToGraph)
@@ -68,52 +79,58 @@ class AnnisGraphTools
     return addToGraph;
   }
 
-  private boolean isRootNode(AnnisNode n, String namespace,
+  private boolean isRootNode(SNode n, String namespace,
     VisualizerInput input)
   {
-    if (!n.getNamespace().equals(namespace))
+    if (n.getSLayers() == null || n.getSLayers().size() == 0 
+      || !n.getSLayers().get(0).getSName().equals(namespace))
     {
       return false;
     }
-    for (Edge e : n.getIncomingEdges())
+    for (Edge e : n.getSGraph().getInEdges(n.getSId()))
     {
-      if (hasEdgeSubtype(e, AnnisGraphTools.PRIMEDGE_SUBTYPE, input) && e.
-        getSource()
-        != null)
+      if(e instanceof SDominanceRelation)
       {
-        return false;
+        SDominanceRelation rel = (SDominanceRelation) e;
+        if (hasEdgeSubtype(rel, AnnisGraphTools.PRIMEDGE_SUBTYPE, input) && rel.getSSource()
+          != null)
+        {
+          return false;
+        }
       }
     }
     return true;
   }
 
-  private DirectedGraph<AnnisNode, Edge> extractGraph(AnnotationGraph ag,
-    AnnisNode n, VisualizerInput input)
+  private DirectedGraph<SNode, SDominanceRelation> extractGraph(SDocumentGraph sgraph,
+    SNode n, VisualizerInput input)
   {
-    DirectedGraph<AnnisNode, Edge> graph =
-      new DirectedSparseGraph<AnnisNode, Edge>();
+    DirectedGraph<SNode, SDominanceRelation> graph =
+      new DirectedSparseGraph<SNode, SDominanceRelation>();
     copyNode(graph, n, input);
-    for (Edge e : ag.getEdges())
+    for (SRelation e : sgraph.getSRelations())
     {
-      if (hasEdgeSubtype(e, AnnisGraphTools.SECEDGE_SUBTYPE, input) && graph.
-        containsVertex(e.getDestination())
-        && graph.containsVertex(e.getSource()))
+      if(e instanceof SDominanceRelation)
       {
-        graph.addEdge(e, e.getSource(), e.getDestination());
+        if (hasEdgeSubtype((SDominanceRelation) e, AnnisGraphTools.SECEDGE_SUBTYPE, input))
+        {
+          graph.addEdge((SDominanceRelation) e, e.getSSource(), e.getSTarget());
+        }
       }
     }
     return graph;
   }
 
-  private boolean includeEdge(Edge e, VisualizerInput input)
+  private boolean includeEdge(SDominanceRelation e, VisualizerInput input)
   {
     return hasEdgeSubtype(e, AnnisGraphTools.PRIMEDGE_SUBTYPE, input);
   }
 
-  public static boolean hasEdgeSubtype(Edge e, String edgeSubtype,
+  public static boolean hasEdgeSubtype(SDominanceRelation e, String edgeSubtype,
     VisualizerInput input)
   {
-    String name = e.getName();
+    String name = e.getSLayers() != null && e.getSLayers().size() > 0 
+      ? e.getSLayers().get(0).getSName() : null;
 
     if (PRIMEDGE_SUBTYPE.equals(edgeSubtype))
     {
@@ -127,7 +144,7 @@ class AnnisGraphTools
         ? input.getMappings().getProperty("secedge") : SECEDGE_SUBTYPE;
     }
 
-    return e.getEdgeType() == Edge.EdgeType.DOMINANCE && name != null && name.
+    return name != null && name.
       equals(edgeSubtype);
   }
 

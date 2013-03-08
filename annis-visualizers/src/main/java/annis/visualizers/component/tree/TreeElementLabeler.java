@@ -16,10 +16,11 @@
 package annis.visualizers.component.tree;
 
 import annis.libgui.visualizers.VisualizerInput;
-import annis.model.AnnisNode;
 import annis.model.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 
 public interface TreeElementLabeler {
-	String getLabel(AnnisNode n, VisualizerInput input);
-	String getLabel(Edge e, VisualizerInput input);
+	String getLabel(SNode n, VisualizerInput input);
+	String getLabel(SDominanceRelation e, VisualizerInput input);
 }
