@@ -15,6 +15,7 @@
  */
 package annis.visualizers.component.tree;
 
+import annis.CommonHelper;
 import annis.libgui.visualizers.VisualizerInput;
 import annis.model.AnnisNode;
 import annis.model.AnnotationGraph;
@@ -148,17 +149,17 @@ class AnnisGraphTools
       equals(edgeSubtype);
   }
 
-  public static HorizontalOrientation detectLayoutDirection(AnnotationGraph ag)
+  public static HorizontalOrientation detectLayoutDirection(SDocumentGraph graph)
   {
     int withHebrew = 0;
-    for (AnnisNode token : ag.getTokens())
+    for (SToken token : graph.getSTokens())
     {
-      if (isHebrewToken(token.getSpannedText()))
+      if (isHebrewToken(CommonHelper.getSpannedText(token)))
       {
         withHebrew += 1;
       }
     }
-    return (withHebrew > ag.getTokens().size() / 3)
+    return (withHebrew > graph.getSTokens().size() / 3)
       ? HorizontalOrientation.RIGHT_TO_LEFT
       : HorizontalOrientation.LEFT_TO_RIGHT;
   }

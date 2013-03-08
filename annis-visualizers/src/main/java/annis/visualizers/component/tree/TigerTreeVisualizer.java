@@ -294,7 +294,6 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
   @Override
   public void writeOutput(VisualizerInput input, OutputStream outstream)
   {
-    AnnisResult result = input.getResult();
     List<AbstractImageGraphicsItem> layouts = new LinkedList<AbstractImageGraphicsItem>();
 
     double width = 0;
@@ -312,7 +311,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
 
         AbstractImageGraphicsItem item = cl.createLayout(
           new LayoutOptions(VerticalOrientation.TOP_ROOT, AnnisGraphTools.
-          detectLayoutDirection(result.getGraph())));
+          detectLayoutDirection(input.getDocument().getSDocumentGraph())));
 
         Rectangle2D treeSize = item.getBounds();
 
