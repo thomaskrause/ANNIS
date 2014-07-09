@@ -56,38 +56,6 @@ public class AbstractSolutionKeyTest
     List<String> expected = asList(nameAlias + " AS " + idColumnName + index);
     assertThat(actual, is(expected));
   }
-  
-  /**
-   * The node ID is the value of the ID column of aliased for the outer query.
-   */
-  @Test
-  public void shouldReturnTheIdOfTheNode() throws SQLException
-  {
-    // given
-    Object expected = new Object();
-    String idAlias = uniqueString(3);
-    given(tableAccessStrategy.columnName(NODE_TABLE, idColumnName)).willReturn(idAlias);
-    given(resultSet.getObject(1)).willReturn(expected);
-    given(resultSet.findColumn(idAlias)).willReturn(1);
-    given(resultSet.getObject(idAlias)).willReturn(expected);
-    
-    // when
-    Object actual = key.getNodeId(resultSet, tableAccessStrategy);
-    // then
-    assertThat(actual, is(expected));
-  }
-  
-  /**
-   * Signal illegal state if there is an SQL error.
-   */
-  @Test(expected=IllegalStateException.class)
-  public void errorIfResultSetThrowsSqlExceptionInGetNodeId() throws SQLException
-  {
-    // given
-    given(resultSet.getObject(anyString())).willThrow(new SQLException());
-    given(resultSet.getObject(anyInt())).willThrow(new SQLException());
-    // when
-    key.getNodeId(resultSet, tableAccessStrategy);
-  }
+
   
 }

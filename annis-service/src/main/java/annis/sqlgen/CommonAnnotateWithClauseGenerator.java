@@ -47,7 +47,7 @@ public class CommonAnnotateWithClauseGenerator
    *
    * This method must be overridden in child classes or by Spring.
    */
-  protected SolutionKey<?> createSolutionKey()
+  protected SolutionKey<?, ?> createSolutionKey()
   {
     throw new UnsupportedOperationException(
       "BUG: This method needs to be overwritten by ancestors or through Spring");

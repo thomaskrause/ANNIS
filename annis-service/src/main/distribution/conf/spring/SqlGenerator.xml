@@ -105,6 +105,7 @@ limitations under the License.
       <util:map>
         <entry key="name" value="node_name" />
         <entry key="namespace" value="node_namespace" />
+        <entry key="unique_name_appendix" value="node_unique_name_appendix" />
       </util:map>
     </entry>
     <entry key="rank">

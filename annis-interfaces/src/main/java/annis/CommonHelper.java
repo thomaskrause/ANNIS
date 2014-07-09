@@ -45,7 +45,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.emf.common.util.BasicEList;
@@ -518,4 +520,64 @@ public class CommonHelper
 //
 //    return result;
 //  }
+  
+  /**
+   * Will construct a valid Salt URI from its basic components.
+   * @param path The path as a list of (sub-) corpora, excluding the node name
+   * @param nodeName The <b>unique</b> node name. If the original node name is not unique for a document, it will need an appendix.
+   * @param nodeAnnotationNamespace The namespace of the annotation or null if matching the whole node.
+   * @param nodeAnnotationName The name of the annotation or null if matching the whole node.
+   * @return 
+   */
+  public static URI buildSaltId(List<String> path, String nodeName,
+    String nodeAnnotationNamespace, String nodeAnnotationName)
+  {
+    StringBuilder sb = new StringBuilder("salt:/");
+
+    for (String dir : path)
+    {
+      try
+      {
+        sb.append(URLEncoder.encode(dir, "UTF-8")).append("/");
+      }
+      catch (UnsupportedEncodingException ex)
+      {
+        log.error(null, ex);
+        // fallback, cross fingers there are no invalid characters
+        sb.append(dir).append("/");
+      }
+    }
+   
+    // append information about the matched annotation
+    if (nodeAnnotationName != null)
+    {
+      if (nodeAnnotationNamespace == null)
+      {
+        sb.append("?a=").append(nodeAnnotationName);
+      }
+      else
+      {
+        sb.append("?a=")
+          .append(nodeAnnotationNamespace)
+          .append("::")
+          .append(nodeAnnotationName);
+      }
+    }
+    
+     sb.append("#").append(nodeName);
+
+
+    URI result;
+    try
+    {
+      result = new URI(sb.toString());
+      return result;
+    }
+    catch (URISyntaxException ex)
+    {
+      log.error("Could not generate valid ID from path "
+        + path.toString() + " and node name " + nodeName, ex);
+    }
+    return null;
+  }
 }

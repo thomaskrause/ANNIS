@@ -24,7 +24,7 @@ public class AnnotateInnerQuerySqlGenerator extends AbstractUnionSqlGenerator
   // sort solutions
   private boolean sortSolutions;
   // annotation graph key generation
-  private SolutionKey<?> solutionKey;
+  private SolutionKey<?,?> solutionKey;
 
   @Override
   public String toSql(QueryData queryData, String indent)
@@ -148,12 +148,12 @@ public class AnnotateInnerQuerySqlGenerator extends AbstractUnionSqlGenerator
     this.sortSolutions = sortSolutions;
   }
 
-  public SolutionKey<?> getSolutionKey()
+  public SolutionKey<?,?> getSolutionKey()
   {
     return solutionKey;
   }
 
-  public void setSolutionKey(SolutionKey<?> solutionKey)
+  public void setSolutionKey(SolutionKey<?,?> solutionKey)
   {
     this.solutionKey = solutionKey;
   }

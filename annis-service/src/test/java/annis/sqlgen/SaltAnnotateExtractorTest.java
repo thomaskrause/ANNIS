@@ -71,7 +71,7 @@ public class SaltAnnotateExtractorTest
       "SampleAnnotateResult_MultiText.csv"));
 
     instance = new SaltAnnotateExtractor() {
-      protected SolutionKey<?> createSolutionKey() {
+      protected SolutionKey<?,?> createSolutionKey() {
         return solutionKey;
       }
     };

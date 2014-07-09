@@ -16,14 +16,12 @@
 
 package annis.sqlgen;
 
+import annis.CommonHelper;
 import annis.model.QueryNode;
 import annis.ql.parser.QueryData;
 import annis.service.objects.Match;
 import com.google.common.base.Preconditions;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -203,21 +201,22 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator
         String columnName = metaData.getColumnName(column);
         if (columnName.startsWith("node_name"))
         {
-          String numberAsString = columnName.substring("node_name".length());
+          // extract the node name for the n-th node of the single match.
+          String matchedNumberAsString = columnName.substring("node_name".length());
           try
           {
-            int number = Integer.parseInt(numberAsString);
-            nodeNames.put(number, rs.getString(column));
+            int matchedNumber = Integer.parseInt(matchedNumberAsString);
+            nodeNames.put(matchedNumber, rs.getString(column));
 
-            String annoNamespace = rs.getString("node_annotation_ns" + number);
+            String annoNamespace = rs.getString("node_annotation_ns" + matchedNumber);
             if (annoNamespace != null)
             {
-              nodeAnnoNamespaces.put(number, annoNamespace);
+              nodeAnnoNamespaces.put(matchedNumber, annoNamespace);
             }
-            String annoName = rs.getString("node_annotation_name" + number);
+            String annoName = rs.getString("node_annotation_name" + matchedNumber);
             if (annoName != null)
             {
-              nodeAnnoNames.put(number, annoName);
+              nodeAnnoNames.put(matchedNumber, annoName);
             }
 
           }
@@ -232,7 +231,7 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator
       for (Map.Entry<Integer, String> nodeNameEntry : nodeNames.entrySet())
       {
         URI saltID
-          = buildSaltId(corpus_path, nodeNameEntry.getValue(),
+          = CommonHelper.buildSaltId(corpus_path, nodeNameEntry.getValue(),
             nodeAnnoNamespaces.get(nodeNameEntry.getKey()),
             nodeAnnoNames.get(nodeNameEntry.getKey()));
         match.addSaltId(saltID);
@@ -242,59 +241,6 @@ public class FindSqlGenerator extends AbstractUnionSqlGenerator
 
     return match;
   }
-  
-  private URI buildSaltId(List<String> path, String node_name,
-    String nodeAnnotatioNamespace, String nodeAnnotatioName)
-  {
-    StringBuilder sb = new StringBuilder("salt:/");
-
-    for (String dir : path)
-    {
-      try
-      {
-        sb.append(URLEncoder.encode(dir, "UTF-8")).append("/");
-      }
-      catch (UnsupportedEncodingException ex)
-      {
-        log.error(null, ex);
-        // fallback, cross fingers there are no invalid characters
-        sb.append(dir).append("/");
-      }
-    }
-   
-    // append information about the matched annotation
-    if (nodeAnnotatioName != null)
-    {
-      if (nodeAnnotatioNamespace == null)
-      {
-        sb.append("?a=").append(nodeAnnotatioName);
-      }
-      else
-      {
-        sb.append("?a=")
-          .append(nodeAnnotatioNamespace)
-          .append("::")
-          .append(nodeAnnotatioName);
-      }
-    }
-    
-     sb.append("#").append(node_name);
-
-
-    URI result;
-    try
-    {
-      result = new URI(sb.toString());
-      return result;
-    }
-    catch (URISyntaxException ex)
-    {
-      log.error("Could not generate valid ID from path "
-        + path.toString() + " and node name " + node_name, ex);
-    }
-    return null;
-  }
-  
   
   public boolean isOutputCorpusPath()
   {

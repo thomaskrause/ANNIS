@@ -105,7 +105,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
       AtomicInteger numberOfEdges = new AtomicInteger();
       int match_index = 0;
       
-      SolutionKey<?> key = createSolutionKey();
+      SolutionKey<?,?> key = createSolutionKey();
 
       int counter = 0;
       while (resultSet.next())
@@ -463,7 +463,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     SDocumentGraph graph, TreeSet<Long> allTextIDs, TreeMap<Long, String> tokenTexts,
     TreeMap<Long, SToken> tokenByIndex, 
     TreeMap<String, TreeMap<Long, String>> nodeBySegmentationPath,
-    SolutionKey<?> key,
+    SolutionKey<?,?> key,
     URI[] keyNameList) throws SQLException
   {
     String name = stringValue(resultSet, NODE_TABLE, "node_name");
@@ -1047,7 +1047,7 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     return layer;
   }
   
-  protected SolutionKey<?> createSolutionKey()
+  protected SolutionKey<?,?> createSolutionKey()
   {
     throw new UnsupportedOperationException(
       "BUG: This method needs to be overwritten by ancestors or through Spring");

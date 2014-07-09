@@ -75,7 +75,7 @@ public class MatrixSqlGenerator
    *
    * This method must be overridden in child classes or by Spring.
    */
-  protected SolutionKey<?> createSolutionKey()
+  protected SolutionKey<?, ?> createSolutionKey()
   {
     throw new UnsupportedOperationException(
       "BUG: This method needs to be overwritten by ancestors or through Spring");
@@ -145,7 +145,7 @@ public class MatrixSqlGenerator
 
     TableAccessStrategy tables = tables(null);
 
-    SolutionKey<?> key = createSolutionKey();
+    SolutionKey<?, ?> key = createSolutionKey();
 //    TableAccessStrategy tas = createTableAccessStrategy();
     List<String> keyColumns =
       key.generateOuterQueryColumns(tables, alternative.size());

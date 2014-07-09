@@ -72,17 +72,19 @@ public class TestAnnotateSqlGenerator
   
   // class under test
   private DummyAnnotateSqlGenerator generator = new DummyAnnotateSqlGenerator() {
+    @Override
     protected TableAccessStrategy createTableAccessStrategy() {
       return tableAccessStrategy;
     };
-    protected SolutionKey<?> createSolutionKey() {
+    @Override
+    protected SolutionKey<?,?> createSolutionKey() {
       return solutionKey;
     };
   };
   
   // dependencies
   @Mock private TableAccessStrategy tableAccessStrategy;
-  @Mock private SolutionKey<?> solutionKey;
+  @Mock private SolutionKey<?,?> solutionKey;
   
   // test data
   @Mock private QueryData queryData;

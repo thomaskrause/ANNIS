@@ -84,7 +84,7 @@ public class LegacyGraphConverterTest
 
     SaltAnnotateExtractor saltExtractor = new SaltAnnotateExtractor() {
       @Override
-      protected SolutionKey<?> createSolutionKey()
+      protected SolutionKey<?,?> createSolutionKey()
       {
         PostgreSqlArraySolutionKey<Long> key = new PostgreSqlArraySolutionKey<>();
         key.setKeyColumnName("key");

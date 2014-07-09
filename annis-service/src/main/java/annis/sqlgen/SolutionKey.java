@@ -3,7 +3,7 @@ package annis.sqlgen;
 import java.sql.ResultSet;
 import java.util.List;
 
-public interface SolutionKey<KeyType>
+public interface SolutionKey<KeyType, IdType>
 {
 
   /**
@@ -56,15 +56,9 @@ public interface SolutionKey<KeyType>
   public abstract Integer getMatchedNodeIndex(Object id);
   
   /**
-   * Returns the name of the key columns.
-   * @param size The number of matched nodes in a solution.
-   */
-  public abstract List<String> getKeyColumns(int size);
-  
-  /**
    * Returns the node ID of the current row in a result set.
    */
-  public abstract Object getNodeId(ResultSet resultSet, TableAccessStrategy tableAccessStrategy);
+  public abstract IdType getNodeId(ResultSet resultSet, TableAccessStrategy tableAccessStrategy);
   
   public abstract int getKeySize();
  

@@ -50,36 +50,6 @@ public class AbstractSolutionKey<BaseType>
     return StringUtils.join(getCurrentKey(), ",");
   }
 
-  public Object getNodeId(ResultSet resultSet,
-    TableAccessStrategy tableAccessStrategy)
-  {
-    try
-    {
-      String idAlias = tableAccessStrategy.columnName(NODE_TABLE,
-        getIdColumnName());
-      int idAliasIdx = resultSet.findColumn(idAlias);
-      if (resultSet.getMetaData() != null)
-      {
-        switch (resultSet.getMetaData().getColumnType(idAliasIdx))
-        {
-          case Types.VARCHAR:
-            return resultSet.getString(idAliasIdx);
-          case Types.BIGINT:
-            return resultSet.getLong(idAliasIdx);
-          case Types.INTEGER:
-            return resultSet.getInt(idAliasIdx);
-        }
-      }
-      // default
-      return resultSet.getObject(idAliasIdx);
-    }
-    catch (SQLException e)
-    {
-      log.error("Exception thrown while retrieving node ID", e);
-      throw new IllegalStateException(
-        "Could not retrieve node ID from JDBC results set", e);
-    }
-  }
 
   public String getIdColumnName()
   {

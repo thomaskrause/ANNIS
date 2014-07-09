@@ -218,16 +218,4 @@ public class PostgreSqlArraySolutionKeyTest
     assertThat(actual, is(expected));
   }
   
-  /**
-   * Return the name of the key array as key column.
-   */
-  @Test
-  public void shouldReturnKeyArrayNameAsKeyColumn()
-  {
-    // when
-    List<String> keyColumns = key.getKeyColumns(0);
-    // then
-    assertThat(keyColumns, is(asList(keyColumnName)));
-  }
-  
 }

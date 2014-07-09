@@ -87,14 +87,17 @@ public class SolutionSqlGenerator extends AbstractUnionSqlGenerator
       }
       if (outputNodeName)
       {
+        String concatNodeName = tblAccessStr.aliasedColumn(NODE_TABLE, "node_name")
+          + " || "
+          + tblAccessStr.aliasedColumn(NODE_TABLE, "unique_name_appendix");
         if(needsDistinct)
         {
-          cols.add("min(" + tblAccessStr.aliasedColumn(NODE_TABLE, "node_name")
+          cols.add("min(" + concatNodeName
             + ") AS node_name" + i);
         }
         else
         {
-          cols.add(tblAccessStr.aliasedColumn(NODE_TABLE, "node_name")
+          cols.add(concatNodeName
             + " AS node_name" + i);
         }
       }

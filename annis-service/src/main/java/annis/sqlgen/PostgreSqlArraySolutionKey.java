@@ -1,10 +1,12 @@
 package annis.sqlgen;
 
+import static annis.sqlgen.TableAccessStrategy.NODE_TABLE;
 import static java.util.Arrays.asList;
 
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -19,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * @param <BaseType>
  */
 public class PostgreSqlArraySolutionKey<BaseType> extends AbstractSolutionKey<BaseType>
-  implements SolutionKey<List<BaseType>>
+  implements SolutionKey<List<BaseType>, Long>
 {
 
   // logging with log4j
@@ -81,11 +83,24 @@ public class PostgreSqlArraySolutionKey<BaseType> extends AbstractSolutionKey<Ba
         "Could not retrieve key from JDBC results set", e);
     }
   }
-
+  
   @Override
-  public List<String> getKeyColumns(int size)
+  public Long getNodeId(ResultSet resultSet,
+    TableAccessStrategy tableAccessStrategy)
   {
-    return asList(keyColumnName);
+    try
+    {
+      String idAlias = tableAccessStrategy.columnName(NODE_TABLE,
+        getIdColumnName());
+      int idAliasIdx = resultSet.findColumn(idAlias);
+      return resultSet.getLong(idAliasIdx);
+    }
+    catch (SQLException e)
+    {
+      log.error("Exception thrown while retrieving node ID", e);
+      throw new IllegalStateException(
+        "Could not retrieve node ID from JDBC results set", e);
+    }
   }
 
   public String getKeyColumnName()

@@ -25,8 +25,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +75,17 @@ public class Match implements Serializable
     this.saltIDs = saltIDs;
   }
   
+  /**
+   * Parses the textual format for a match.
+   * There is one line per match and each ID is separated by space. E.g.
+   * <pre>
+salt:/pcc2/11299/#tok_1 salt:/pcc2/11299/#tok_2
+salt:/pcc2/11299/#tok_2 salt:/pcc2/11299/#tok_3
+salt:/pcc2/11299/#tok_3 salt:/pcc2/11299/#tok_4
+   * </pre>
+   * @param raw
+   * @return 
+   */
   public static Match parseFromString(String raw)
   {
     Match match = new Match();
@@ -110,7 +121,7 @@ public class Match implements Serializable
   public String toString()
   {
     Iterator<URI> it = saltIDs.iterator();
-    LinkedList<String> asString = new LinkedList<String>();
+    LinkedList<String> asString = new LinkedList<>();
     while(it.hasNext())
     {
       URI u = it.next();
@@ -121,6 +132,34 @@ public class Match implements Serializable
     }
     return Joiner.on(" ").join(asString);
   }
+
+  @Override
+  public int hashCode()
+  {
+    int hash = 3;
+    hash = 41 * hash + Objects.hashCode(this.saltIDs);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if (obj == null)
+    {
+      return false;
+    }
+    if (getClass() != obj.getClass())
+    {
+      return false;
+    }
+    final Match other = (Match) obj;
+    if (!Objects.equals(this.saltIDs, other.saltIDs))
+    {
+      return false;
+    }
+    return true;
+  }
+  
   
   
   
