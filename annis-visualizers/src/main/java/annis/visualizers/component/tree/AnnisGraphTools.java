@@ -25,10 +25,10 @@ import annis.model.Edge;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class AnnisGraphTools implements Serializable
 {
@@ -42,7 +42,7 @@ public class AnnisGraphTools implements Serializable
       this.input = input;
   }
 
-  public List<DirectedGraph<AnnisNode, Edge>> getSyntaxGraphs()
+  public Collection<DirectedGraph<AnnisNode, Edge>> getSyntaxGraphs()
   {
     AnnotationGraph ag = input.getResult().getGraph();
     String namespace = input.getMappings().getProperty("node_ns", input.
@@ -52,10 +52,12 @@ public class AnnisGraphTools implements Serializable
     String terminalNamespace =  input.getMappings().getProperty(
       TigerTreeVisualizer.TERMINAL_NS_KEY);
     
-    List<DirectedGraph<AnnisNode, Edge>> resultGraphs =
-      new ArrayList<DirectedGraph<AnnisNode, Edge>>();
+    TreeMap<Long, DirectedGraph<AnnisNode, Edge>> resultGraphs =
+      new TreeMap<>();
 
     Set<AnnisNode> orphanTerminals = new HashSet<>();
+    
+    
     
     for (AnnisNode n : ag.getNodes())
     {
@@ -66,22 +68,24 @@ public class AnnisGraphTools implements Serializable
       
       if (isRootNode(n, namespace))
       {
-        resultGraphs.add(extractGraph(ag, n, terminalNamespace, terminalName));
+        DirectedGraph<AnnisNode, Edge> directedGraph  = 
+          extractGraph(ag, n, terminalNamespace, terminalName);
+        resultGraphs.put(n.getLeftToken(), directedGraph);
       }
     }
     
     // terminals that are included in any of the graphs aren't orphans
-    for(DirectedGraph<AnnisNode,?> g : resultGraphs)
+    for(DirectedGraph<AnnisNode,?> g : resultGraphs.values())
     {
       orphanTerminals.removeAll(g.getVertices());
     }
     
     for (AnnisNode n : orphanTerminals)
     {
-      resultGraphs.add(extractGraph(ag, n, terminalNamespace, terminalName));
+      resultGraphs.put(n.getLeftToken(),  extractGraph(ag, n, terminalNamespace, terminalName));
     }
     
-    return resultGraphs;
+    return resultGraphs.values();
   }
 
   private boolean copyNode(DirectedGraph<AnnisNode, Edge> graph, AnnisNode n,
