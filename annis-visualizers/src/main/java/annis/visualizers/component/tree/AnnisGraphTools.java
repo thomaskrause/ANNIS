@@ -67,8 +67,13 @@ public class AnnisGraphTools implements Serializable
       if (isRootNode(n, namespace))
       {
         resultGraphs.add(extractGraph(ag, n, terminalNamespace, terminalName));
-        orphanTerminals.remove(n);
       }
+    }
+    
+    // terminals that are included in any of the graphs aren't orphans
+    for(DirectedGraph<AnnisNode,?> g : resultGraphs)
+    {
+      orphanTerminals.removeAll(g.getVertices());
     }
     
     for (AnnisNode n : orphanTerminals)

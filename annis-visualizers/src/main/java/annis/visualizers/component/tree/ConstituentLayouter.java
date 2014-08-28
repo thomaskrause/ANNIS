@@ -354,13 +354,22 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			treeLayout.setBaseline(styler.getFont(TOKEN_NODE, input).getLineHeight());
 			treeLayout.setNtStart(styler.getFont(TOKEN_NODE, input).getLineHeight());
 		}
-		calculateNodePosition(root, treeLayout, options);
-		Edge e = getOutgoingEdges(root).get(0);
-		GraphicsItem edges = backend.makeLines(treeLayout.getLines(), 
-      styler.getEdgeColor(e, input), styler.getStroke(e, input));
-		edges.setZValue(-4);
-		edges.setParentItem(treeLayout.getParentItem());
-		addSecEdges(treeLayout, options);
+    
+    if(AnnisGraphTools.isTerminal(root, input))
+    {
+      addTerminalNode(root, treeLayout);
+    }
+    else
+    {
+      calculateNodePosition(root, treeLayout, options);
+    
+      Edge e = getOutgoingEdges(root).get(0);
+      GraphicsItem edges = backend.makeLines(treeLayout.getLines(), 
+        styler.getEdgeColor(e, input), styler.getStroke(e, input));
+      edges.setZValue(-4);
+      edges.setParentItem(treeLayout.getParentItem());
+      addSecEdges(treeLayout, options);
+    }
 		return treeLayout.getParentItem();
 	}
 
@@ -368,7 +377,8 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 		double y = treeLayout.getYPosition(current);
 		
 		List<Double> childPositions = new ArrayList<Double>();
-		for (Edge e: getOutgoingEdges(current)) {
+		for (Edge e: getOutgoingEdges(current)) 
+    {
 			AnnisNode child = graph.getOpposite(current, e);
 			Point2D childPos;
       
@@ -395,11 +405,11 @@ public class ConstituentLayouter<T extends GraphicsItem> {
 			label.setZValue(10);
 			label.setParentItem(treeLayout.parentItem);
 		}
-		
+    
 		double xCenter = treeLayout.getNodeList().findBestPosition(dataMap.get(current), 
 				Collections.min(childPositions), 
 				Collections.max(childPositions));
-
+    
 		GraphicsItem label = backend.makeLabel(
 				labeler.getLabel(current, input), new Point2D.Double(xCenter, y), 
 				styler.getFont(current, input), styler.getTextBrush(current, input), 
