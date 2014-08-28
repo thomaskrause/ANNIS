@@ -26,6 +26,7 @@ import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,13 +55,27 @@ public class AnnisGraphTools implements Serializable
     List<DirectedGraph<AnnisNode, Edge>> resultGraphs =
       new ArrayList<DirectedGraph<AnnisNode, Edge>>();
 
+    Set<AnnisNode> orphanTerminals = new HashSet<>();
+    
     for (AnnisNode n : ag.getNodes())
     {
+      if(isTerminal(n, input))
+      {
+        orphanTerminals.add(n);
+      }
+      
       if (isRootNode(n, namespace))
       {
         resultGraphs.add(extractGraph(ag, n, terminalNamespace, terminalName));
+        orphanTerminals.remove(n);
       }
     }
+    
+    for (AnnisNode n : orphanTerminals)
+    {
+      resultGraphs.add(extractGraph(ag, n, terminalNamespace, terminalName));
+    }
+    
     return resultGraphs;
   }
 

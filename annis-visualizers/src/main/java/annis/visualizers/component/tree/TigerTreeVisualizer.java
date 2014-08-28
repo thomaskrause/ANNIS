@@ -24,6 +24,7 @@ import annis.model.AnnisNode;
 import annis.model.Annotation;
 import annis.model.Edge;
 import annis.service.ifaces.AnnisResult;
+import com.google.common.base.Preconditions;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -317,10 +318,13 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     double width = 0;
     double maxheight = 0;
 
+    boolean treeExtracted = false;
+    
     for(DirectedGraph<AnnisNode, Edge> g : graphtools.getSyntaxGraphs())
     {
-      if(g.getEdgeCount() > 0 && g.getVertexCount() > 0)
+      if(g.getVertexCount() > 0)
       {
+        treeExtracted = true;
       
         ConstituentLayouter<AbstractImageGraphicsItem> cl = new ConstituentLayouter<AbstractImageGraphicsItem>(
           g, getBackend(), labeler, styler, input, graphtools);
@@ -336,6 +340,10 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
         layouts.add(item);
       }
     }
+    
+    
+    Preconditions.checkState(treeExtracted, "Could not extract a tree");
+    
 
     BufferedImage image = new BufferedImage(
       (int) (width + (layouts.size() - 1) * TREE_DISTANCE + 2 * SIDE_MARGIN),
