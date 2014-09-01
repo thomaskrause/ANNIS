@@ -104,6 +104,18 @@ public enum MatchedNodeColors
     }
     return result;
   }
+  
+  public static Color colorByMatch(Long match)
+  {
+    if(match == null)
+    {
+      return null;
+    }
+    int m = ((int) ((long) match))-1;
+    m = Math.min(m, MatchedNodeColors.values().length);
+    MatchedNodeColors c = MatchedNodeColors.values()[m];
+    return c.getColor();
+  }
 
   public static String colorClassByMatch(Long match)
   {

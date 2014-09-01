@@ -29,6 +29,7 @@ import com.google.common.base.Preconditions;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SFeature;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import java.awt.*;
@@ -120,17 +121,16 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     {
       if(isQueryMatch(n))
       {
-        // get CSS color name
-        String backColorName = input.getMarkableMap().get("" + n.getId());
         Color backColor = Color.RED;
-        try
-        {
-          backColor = MatchedNodeColors.valueOf(backColorName).getColor();
-        }
-        catch(IllegalArgumentException ex)
-        {
-        }
 
+        // get CSS color name
+        SFeature featMarked = n.getSFeature(AnnisConstants.ANNIS_NS,
+          AnnisConstants.FEAT_MATCHEDNODE);
+
+        if (featMarked != null)
+        {
+          backColor = MatchedNodeColors.colorByMatch(featMarked.getSValueSNUMERIC());
+        }
 
         if(AnnisGraphTools.isTerminal(n, input))
         {

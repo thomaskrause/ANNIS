@@ -27,6 +27,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SFeature;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 import edu.uci.ics.jung.graph.DirectedGraph;
@@ -69,11 +70,9 @@ public class AnnisGraphTools implements Serializable
 
     Set<SNode> orphanTerminals = new HashSet<>();
 
-
     for (SNode n : result.getSDocumentGraph().getSNodes())
     {
-      RelannisNodeFeature featNode = (RelannisNodeFeature) n.getSFeature(
-        AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE).getSValue();
+      RelannisNodeFeature featNode = getRelANNISFeatures(n);
       if(isTerminal(n, input))
       {
         orphanTerminals.add(n);
@@ -97,8 +96,7 @@ public class AnnisGraphTools implements Serializable
     
     for (SNode n : orphanTerminals)
     {
-      RelannisNodeFeature featNode = (RelannisNodeFeature) n.getSFeature(
-        AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE).getSValue();
+      RelannisNodeFeature featNode = getRelANNISFeatures(n);
       resultGraphs.put(featNode.getLeftToken(),  extractGraph(result.getSDocumentGraph(), 
         n, terminalNamespace, terminalName));
     }
@@ -291,5 +289,20 @@ public class AnnisGraphTools implements Serializable
       } 
     }
     return null;
+  }
+  
+  public RelannisNodeFeature getRelANNISFeatures(SNode node)
+  {
+    SFeature featNode = node.getSFeature(
+        AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE);
+    if(featNode != null)
+    {
+      RelannisNodeFeature val = (RelannisNodeFeature) featNode.getSValue();
+      if(val != null)
+      {
+        return val;
+      }
+    }    
+    return new RelannisNodeFeature();
   }
 }
