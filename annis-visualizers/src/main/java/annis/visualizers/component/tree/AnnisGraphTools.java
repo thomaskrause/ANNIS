@@ -68,17 +68,17 @@ public class AnnisGraphTools implements Serializable
     TreeMap<Long, DirectedGraph<SNode, SDominanceRelation>> resultGraphs =
       new TreeMap<>();
 
-    Set<SNode> orphanTerminals = new HashSet<>();
+    //Set<SNode> orphanTerminals = new HashSet<>();
 
     for (SNode n : result.getSDocumentGraph().getSNodes())
     {
       RelannisNodeFeature featNode = getRelANNISFeatures(n);
-      if(isTerminal(n, input))
-      {
-        orphanTerminals.add(n);
-        resultGraphs.put(featNode.getLeftToken(),
-          extractGraph(result.getSDocumentGraph(), n, terminalNamespace, terminalName));
-      }
+//      if(isTerminal(n, input))
+//      {
+//        orphanTerminals.add(n);
+//        resultGraphs.put(featNode.getLeftToken(),
+//          extractGraph(result.getSDocumentGraph(), n, terminalNamespace, terminalName));
+//      }
       
       if (isRootNode(n, namespace))
       {
@@ -89,17 +89,17 @@ public class AnnisGraphTools implements Serializable
     }
     
     // terminals that are included in any of the graphs aren't orphans
-    for(DirectedGraph<SNode,?> g : resultGraphs.values())
-    {
-      orphanTerminals.removeAll(g.getVertices());
-    }
-    
-    for (SNode n : orphanTerminals)
-    {
-      RelannisNodeFeature featNode = getRelANNISFeatures(n);
-      resultGraphs.put(featNode.getLeftToken(),  extractGraph(result.getSDocumentGraph(), 
-        n, terminalNamespace, terminalName));
-    }
+//    for(DirectedGraph<SNode,?> g : resultGraphs.values())
+//    {
+//      orphanTerminals.removeAll(g.getVertices());
+//    }
+//    
+//    for (SNode n : orphanTerminals)
+//    {
+//      RelannisNodeFeature featNode = getRelANNISFeatures(n);
+//      resultGraphs.put(featNode.getLeftToken(),  extractGraph(result.getSDocumentGraph(), 
+//        n, terminalNamespace, terminalName));
+//    }
     
     return resultGraphs.values();
   }
