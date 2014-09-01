@@ -36,10 +36,8 @@ public enum HorizontalOrientation {
 			@Override
 			public int compare(SNode o1, SNode o2) {
 				
-        RelannisNodeFeature featNode1 = (RelannisNodeFeature)
-          o1.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE);
-        RelannisNodeFeature featNode2 = (RelannisNodeFeature)
-          o2.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE);
+        RelannisNodeFeature featNode1 = AnnisGraphTools.getRelANNISFeatures(o1);
+        RelannisNodeFeature featNode2 = AnnisGraphTools.getRelANNISFeatures(o2);
         
         return directionModifier * (int) (featNode1.getLeftToken() - featNode2.getLeftToken());
 

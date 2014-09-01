@@ -117,7 +117,7 @@ public class AnnisGraphTools implements Serializable
         if (e instanceof SDominanceRelation)
         {
           SDominanceRelation rel = (SDominanceRelation) e;
-          if (includeEdge(rel, input)
+          if (includeEdge(rel)
             && copyNode(graph, rel.getSTarget(), terminalNamespace, terminalName))
           {
             addToGraph |= true;
@@ -198,30 +198,25 @@ public class AnnisGraphTools implements Serializable
     return graph;
   }
 
-  private boolean includeEdge(SDominanceRelation e, VisualizerInput input)
+  private boolean includeEdge(SDominanceRelation e)
   {
     return hasEdgeSubtype(e, getPrimEdgeSubType());
   }
 
   public boolean hasEdgeSubtype(SDominanceRelation e, String edgeSubtype)
   {
-    String name = e.getSLayers() != null && e.getSLayers().size() > 0 
-      ? e.getSLayers().get(0).getSName() : null;
-
-    if (getPrimEdgeSubType().equals(edgeSubtype))
+    if(e.getSTypes() != null)
     {
-      edgeSubtype = input.getMappings().getProperty("edge") != null
-        ? input.getMappings().getProperty("edge") : getPrimEdgeSubType();
+      for(String type : e.getSTypes())
+      {
+        if (type.equals(edgeSubtype))
+        {
+          return true;
+        }
+      }
     }
+    return false;
 
-    if (getSecEdgeSubType().equals(edgeSubtype))
-    {
-      edgeSubtype = input.getMappings().getProperty("secedge") != null
-        ? input.getMappings().getProperty("secedge") : getSecEdgeSubType();
-    }
-
-    return name != null && name.
-      equals(edgeSubtype);
   }
 
   public static HorizontalOrientation detectLayoutDirection(SDocumentGraph graph)
@@ -291,7 +286,7 @@ public class AnnisGraphTools implements Serializable
     return null;
   }
   
-  public RelannisNodeFeature getRelANNISFeatures(SNode node)
+  public static RelannisNodeFeature getRelANNISFeatures(SNode node)
   {
     SFeature featNode = node.getSFeature(
         AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_RELANNIS_NODE);
