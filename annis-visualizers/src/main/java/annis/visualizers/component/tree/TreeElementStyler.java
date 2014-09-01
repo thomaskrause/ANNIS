@@ -17,24 +17,26 @@ package annis.visualizers.component.tree;
 
 import annis.libgui.visualizers.VisualizerInput;
 import annis.visualizers.component.tree.GraphicsBackend.Font;
-import annis.model.AnnisNode;
-import annis.model.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import java.awt.Color;
 import java.awt.Stroke;
 
   public interface TreeElementStyler {
 	
-	Font getFont(AnnisNode n, VisualizerInput input);
-	Font getFont(Edge e);
+
+	Font getFont(SNode n, VisualizerInput input);
+	Font getFont(SDominanceRelation e);
 	
-	Color getTextBrush(AnnisNode n, VisualizerInput input);
-	Color getTextBrush(Edge n);
+	Color getTextBrush(SNode n);
+	Color getTextBrush(SDominanceRelation n);
 	
-	Color getEdgeColor(Edge n, VisualizerInput input);
-	Stroke getStroke(Edge n, VisualizerInput input);
+	Color getEdgeColor(SDominanceRelation n, VisualizerInput input);
+	Stroke getStroke(SDominanceRelation n, VisualizerInput input);
 	
-	Shape getShape(AnnisNode n, VisualizerInput input);
-	Shape getShape(Edge e, VisualizerInput input);
+	Shape getShape(SNode n, VisualizerInput input);
+	Shape getShape(SDominanceRelation e, VisualizerInput input);
 	
 	
 	int getLabelPadding();

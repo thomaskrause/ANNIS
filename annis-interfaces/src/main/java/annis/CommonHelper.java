@@ -232,7 +232,6 @@ public class CommonHelper
   public static String getSpannedText(SToken tok)
   {
     SDocumentGraph graph = tok.getSDocumentGraph();
-
     EList<Edge> edges = graph.getOutEdges(tok.getSId());
     for (Edge e : edges)
     {

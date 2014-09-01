@@ -15,16 +15,21 @@
  */
 package annis.visualizers.component.tree;
 
+import annis.CommonHelper;
 import annis.libgui.MatchedNodeColors;
 import annis.libgui.visualizers.VisualizerInput;
+import annis.model.AnnisConstants;
 import annis.visualizers.component.AbstractImageVisualizer;
 import annis.visualizers.component.tree.backends.staticimg.AbstractImageGraphicsItem;
 import annis.visualizers.component.tree.backends.staticimg.Java2dBackend;
 import annis.model.AnnisNode;
-import annis.model.Annotation;
 import annis.model.Edge;
 import annis.service.ifaces.AnnisResult;
 import com.google.common.base.Preconditions;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -36,7 +41,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.*;
 import javax.imageio.ImageIO;
+import javax.ws.rs.HEAD;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+import org.eclipse.emf.common.util.EList;
 
 /**
  * Visualizes a constituent syntax tree.
@@ -83,12 +90,13 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
       this.backend = backend_;
     }
 
+    @Override
     public int getLabelPadding()
     {
       return LABEL_PADDING;
     }
 
-    public GraphicsBackend.Font getFont(AnnisNode n, VisualizerInput input)
+    public GraphicsBackend.Font getFont(SNode n, VisualizerInput input)
     {
       if(AnnisGraphTools.isTerminal(n, input))
       {
@@ -101,15 +109,16 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
 
     }
 
-    public GraphicsBackend.Font getFont(Edge e)
+    @Override
+    public GraphicsBackend.Font getFont(SDominanceRelation e)
     {
       return backend.getFont(Font.SANS_SERIF, 10, java.awt.Font.PLAIN);
     }
 
     @Override
-    public Shape getShape(AnnisNode n, VisualizerInput input)
+    public Shape getShape(SNode n, VisualizerInput input)
     {
-      if(isQueryMatch(n, input))
+      if(isQueryMatch(n))
       {
         // get CSS color name
         String backColorName = input.getMarkableMap().get("" + n.getId());
@@ -121,6 +130,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
         catch(IllegalArgumentException ex)
         {
         }
+
 
         if(AnnisGraphTools.isTerminal(n, input))
         {
@@ -144,13 +154,13 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
       }
     }
 
-    private boolean isQueryMatch(AnnisNode n, VisualizerInput input)
+    private boolean isQueryMatch(SNode n)
     {
-      return input.getMarkableExactMap().containsKey(Long.toString(n.getId()));
+      return n.getSFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_MATCHEDNODE) != null;
     }
 
     @Override
-    public Shape getShape(Edge e, VisualizerInput input)
+    public Shape getShape(SDominanceRelation e, VisualizerInput input)
     {
       if(graphtools.hasEdgeSubtype(e, graphtools.getSecEdgeSubType()))
       {
@@ -163,9 +173,9 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     }
 
     @Override
-    public Color getTextBrush(AnnisNode n, VisualizerInput input)
+    public Color getTextBrush(SNode n)
     {
-      if(isQueryMatch(n, input))
+      if(isQueryMatch(n))
       {
         return Color.WHITE;
       }
@@ -176,7 +186,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     }
 
     @Override
-    public Color getTextBrush(Edge n)
+    public Color getTextBrush(SDominanceRelation n)
     {
       return Color.BLACK;
     }
@@ -188,7 +198,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     }
 
     @Override
-    public Color getEdgeColor(Edge e, VisualizerInput input)
+    public Color getEdgeColor(SDominanceRelation e, VisualizerInput input)
     {
       if(graphtools.hasEdgeSubtype(e, graphtools.getSecEdgeSubType()))
       {
@@ -213,7 +223,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
     }
 
     @Override
-    public Stroke getStroke(Edge e, VisualizerInput input)
+    public Stroke getStroke(SDominanceRelation e, VisualizerInput input)
     {
       if(graphtools.hasEdgeSubtype(e, graphtools.getSecEdgeSubType()))
       {
@@ -233,16 +243,14 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
   {
 
     @Override
-    public String getLabel(AnnisNode n, VisualizerInput input)
+    public String getLabel(SNode n, VisualizerInput input)
     {
-    
       if(AnnisGraphTools.isTerminal(n, input))
       {
         String terminalName = input.getMappings().getProperty(TERMINAL_NAME_KEY);
-        if(terminalName == null)
+        if(terminalName == null && n instanceof SToken)
         {        
-          
-          String spannedText = n.getSpannedText();
+          String spannedText = CommonHelper.getSpannedText((SToken) n);
           if (spannedText == null || "".equals(spannedText))
           {
             spannedText = " ";
@@ -252,32 +260,33 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
         else
         {
           String terminalNamespace = input.getMappings().getProperty(TERMINAL_NS_KEY);
-          return extractAnnotation(n.getNodeAnnotations(), terminalNamespace, terminalName); 
+          return extractAnnotation(n.getSAnnotations(), terminalNamespace, terminalName); 
         }
       }
       else
       {
-        return extractAnnotation(n.getNodeAnnotations(),
+        return extractAnnotation(n.getSAnnotations(),
           input.getMappings().getProperty("node_anno_ns", input.getNamespace()),
           input.getMappings().getProperty("node_key", "cat"));
       }
     }
 
     @Override
-    public String getLabel(Edge e, VisualizerInput input)
+    public String getLabel(SDominanceRelation e, VisualizerInput input)
     {
-      return extractAnnotation(e.getAnnotations(),
+      return extractAnnotation(e.getSAnnotations(),
         input.getMappings().getProperty("edge_anno_ns", input.getNamespace()),
         input.getMappings().getProperty("edge_key", "func"));
     }
 
-    private String extractAnnotation(Set<Annotation> annotations, String namespace, String featureName)
+    private String extractAnnotation(EList<SAnnotation> annotations, String namespace, String featureName)
     {
       String result = AnnisGraphTools.extractAnnotation(annotations, namespace,
         featureName);
       if(result == null)
       {
         result = "--";
+        
       }
       return result;
     }
@@ -311,7 +320,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
   @Override
   public void writeOutput(VisualizerInput input, OutputStream outstream)
   {
-    AnnisResult result = input.getResult();
+
     graphtools = new AnnisGraphTools(input);
     List<AbstractImageGraphicsItem> layouts = new LinkedList<AbstractImageGraphicsItem>();
 
@@ -320,18 +329,18 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
 
     boolean treeExtracted = false;
     
-    for(DirectedGraph<AnnisNode, Edge> g : graphtools.getSyntaxGraphs())
+    for(DirectedGraph<SNode, SDominanceRelation> g : graphtools.getSyntaxGraphs(input))
     {
       if(g.getVertexCount() > 0)
       {
         treeExtracted = true;
       
-        ConstituentLayouter<AbstractImageGraphicsItem> cl = new ConstituentLayouter<AbstractImageGraphicsItem>(
+        ConstituentLayouter<AbstractImageGraphicsItem> cl = new ConstituentLayouter<>(
           g, getBackend(), labeler, styler, input, graphtools);
 
         AbstractImageGraphicsItem item = cl.createLayout(
           new LayoutOptions(VerticalOrientation.TOP_ROOT, AnnisGraphTools.
-          detectLayoutDirection(result.getGraph())));
+          detectLayoutDirection(input.getDocument().getSDocumentGraph())));
 
         Rectangle2D treeSize = item.getBounds();
 
