@@ -22,6 +22,7 @@ import annis.libgui.Helper;
 import annis.libgui.InstanceConfig;
 import annis.service.objects.FrequencyTable;
 import com.vaadin.data.Property;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
@@ -44,7 +45,7 @@ public class FrequencyChart extends VerticalLayout
     FrequencyChart.class);
   
   public static enum VisType {
-    frequency("Frequency bars"), scatterplot("Scatter Plot");
+    histogram("Histogram"), trend("Trend");
     
     public final String shortName;
     
@@ -59,40 +60,54 @@ public class FrequencyChart extends VerticalLayout
   private FrequencyWhiteboard whiteboard;
   
   private final HorizontalLayout toolLayout;
+  private final HorizontalLayout optionLayout;
   
   private final ComboBox typeSelection;
-  private final OptionGroup options;
+  private final OptionGroup histogramOptions;
+  private final ComboBox trendOptions;
   private FrequencyTable lastTable;
 
   public FrequencyChart(FrequencyResultPanel freqPanel)
   {
     setSizeFull();
     
-    typeSelection = new ComboBox();
-    typeSelection.addItem(VisType.frequency);
-    typeSelection.setItemCaption(VisType.frequency, VisType.frequency.shortName);
-    typeSelection.addItem(VisType.scatterplot);
-    typeSelection.setItemCaption(VisType.scatterplot, VisType.scatterplot.shortName);
+    typeSelection = new ComboBox("Visualization type  ");
+    typeSelection.addItem(VisType.histogram);
+    typeSelection.setItemCaption(VisType.histogram, VisType.histogram.shortName);
+    typeSelection.addItem(VisType.trend);
+    typeSelection.setItemCaption(VisType.trend, VisType.trend.shortName);
     typeSelection.setNullSelectionAllowed(false);
-    typeSelection.setValue(VisType.frequency);
+    typeSelection.setValue(VisType.histogram);
     typeSelection.setNewItemsAllowed(false);
-    typeSelection.setSizeUndefined();
+    typeSelection.setWidth("200px");
+    typeSelection.addValueChangeListener(new Property.ValueChangeListener()
+    {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event)
+      {
+        updateType();
+      }
+    });
+    
+    optionLayout = new HorizontalLayout();
+    optionLayout.setWidth("100%");
+    optionLayout.setHeight("-1");
+    optionLayout.setMargin(new MarginInfo(false, false, false, true));
     
     
-    options = new OptionGroup();
-    options.setSizeUndefined();
-    options.addStyleName("horizontal-optiongroup");
-    options.addItem(FrequencyWhiteboard.Scale.LINEAR);
-    options.addItem(FrequencyWhiteboard.Scale.LOG10);
-    options.setItemCaption(FrequencyWhiteboard.Scale.LINEAR, "linear scale");
-    options.setItemCaption(FrequencyWhiteboard.Scale.LOG10, "log<sub>10</sub> scale");
-    options.setSizeUndefined();
+    histogramOptions = new OptionGroup();
+    histogramOptions.setHeight("100%");
+    histogramOptions.setWidth("-1px");
+    histogramOptions.addItem(FrequencyWhiteboard.Scale.LINEAR);
+    histogramOptions.addItem(FrequencyWhiteboard.Scale.LOG10);
+    histogramOptions.setItemCaption(FrequencyWhiteboard.Scale.LINEAR, "linear scale");
+    histogramOptions.setItemCaption(FrequencyWhiteboard.Scale.LOG10, "log<sub>10</sub> scale");
     
-    options.setHtmlContentAllowed(true);
-    options.setImmediate(true);
-    options.setValue(FrequencyWhiteboard.Scale.LINEAR);
+    histogramOptions.setHtmlContentAllowed(true);
+    histogramOptions.setImmediate(true);
+    histogramOptions.setValue(FrequencyWhiteboard.Scale.LINEAR);
    
-    options.addValueChangeListener(new Property.ValueChangeListener()
+    histogramOptions.addValueChangeListener(new Property.ValueChangeListener()
     {
       @Override
       public void valueChange(Property.ValueChangeEvent event)
@@ -105,11 +120,15 @@ public class FrequencyChart extends VerticalLayout
       }
     });
     
-    toolLayout = new HorizontalLayout(typeSelection, options);
+    trendOptions = new ComboBox("time variable");
+    trendOptions.setNewItemsAllowed(false);
+    trendOptions.setHeight("100%");
+    trendOptions.setWidth("-1px");
+    
+    toolLayout = new HorizontalLayout(typeSelection, optionLayout);
     toolLayout.setWidth("100%");
     toolLayout.setHeight("-1px");
-    toolLayout.setComponentAlignment(typeSelection, Alignment.MIDDLE_LEFT);
-    toolLayout.setComponentAlignment(options, Alignment.MIDDLE_LEFT);
+    toolLayout.setExpandRatio(optionLayout, 1.0f);
     
     addComponent(toolLayout);
     InnerPanel panel = new InnerPanel(freqPanel);
@@ -178,8 +197,26 @@ public class FrequencyChart extends VerticalLayout
     }
     
     lastTable = clippedTable;
-    whiteboard.setFrequencyData(clippedTable, (FrequencyWhiteboard.Scale) options.
+    whiteboard.setFrequencyData(clippedTable, (FrequencyWhiteboard.Scale) histogramOptions.
       getValue(), font, fontSize);
+    
+    updateType();
+  }
+  
+  private void updateType()
+  {
+    optionLayout.removeAllComponents();
+    
+    if(typeSelection.getValue() == VisType.histogram)
+    {
+      optionLayout.addComponent(histogramOptions);
+      optionLayout.setComponentAlignment(histogramOptions, Alignment.BOTTOM_LEFT);
+    }
+    else if(typeSelection.getValue() == VisType.trend)
+    {
+      optionLayout.addComponent(trendOptions);
+      optionLayout.setComponentAlignment(trendOptions, Alignment.BOTTOM_LEFT);
+    }
   }
 
   /**
