@@ -113,20 +113,7 @@ public class FrequencyResultPanel extends VerticalLayout
     downloader.extend(btDownloadCSV);
 
     chart.setVisible(true);
-    FrequencyTable clippedTable = table;
-    if (clippedTable.getEntries().size() > MAX_NUMBER_OF_CHART_ITEMS)
-    {
-      List<FrequencyTable.Entry> entries
-        = new ArrayList<>(clippedTable.getEntries());
-
-      clippedTable = new FrequencyTable();
-      clippedTable.setEntries(entries.subList(0,
-        MAX_NUMBER_OF_CHART_ITEMS));
-      clippedTable.setSum(table.getSum());
-      chart.setCaption(
-        "Showing histogram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
-    }
-    chart.setFrequencyData(clippedTable);
+    chart.setFrequencyData(table);
 
 
   }

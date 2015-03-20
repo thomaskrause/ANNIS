@@ -17,6 +17,7 @@ package annis.gui.components;
 
 import annis.gui.SearchUI;
 import annis.gui.frequency.FrequencyResultPanel;
+import static annis.gui.frequency.FrequencyResultPanel.MAX_NUMBER_OF_CHART_ITEMS;
 import annis.libgui.Helper;
 import annis.libgui.InstanceConfig;
 import annis.service.objects.FrequencyTable;
@@ -25,6 +26,8 @@ import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -82,6 +85,20 @@ public class FrequencyChart extends VerticalLayout
 
   public void setFrequencyData(FrequencyTable table)
   {
+    FrequencyTable clippedTable = table;
+    if (clippedTable.getEntries().size() > MAX_NUMBER_OF_CHART_ITEMS)
+    {
+      List<FrequencyTable.Entry> entries
+        = new ArrayList<>(clippedTable.getEntries());
+
+      clippedTable = new FrequencyTable();
+      clippedTable.setEntries(entries.subList(0,
+        MAX_NUMBER_OF_CHART_ITEMS));
+      clippedTable.setSum(table.getSum());
+      setCaption(
+        "Showing histogram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
+    }
+    
     String font = "sans-serif";
     float fontSize = 7.0f; // in pixel
     UI ui = UI.getCurrent();
@@ -124,8 +141,8 @@ public class FrequencyChart extends VerticalLayout
       }
     }
     
-    lastTable = table;
-    whiteboard.setFrequencyData(table, (FrequencyWhiteboard.Scale) options.
+    lastTable = clippedTable;
+    whiteboard.setFrequencyData(clippedTable, (FrequencyWhiteboard.Scale) options.
       getValue(), font, fontSize);
   }
 
