@@ -113,7 +113,7 @@ public class FrequencyResultPanel extends VerticalLayout
     downloader.extend(btDownloadCSV);
 
     chart.setVisible(true);
-    chart.setFrequencyData(table);
+    chart.setFrequencyData(table, query);
 
 
   }

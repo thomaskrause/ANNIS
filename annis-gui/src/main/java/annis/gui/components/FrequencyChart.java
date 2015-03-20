@@ -18,9 +18,12 @@ package annis.gui.components;
 import annis.gui.SearchUI;
 import annis.gui.frequency.FrequencyResultPanel;
 import static annis.gui.frequency.FrequencyResultPanel.MAX_NUMBER_OF_CHART_ITEMS;
+import annis.gui.objects.FrequencyQuery;
 import annis.libgui.Helper;
 import annis.libgui.InstanceConfig;
 import annis.service.objects.FrequencyTable;
+import annis.service.objects.FrequencyTableEntry;
+import annis.service.objects.FrequencyTableEntryType;
 import com.vaadin.data.Property;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -31,7 +34,10 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -66,6 +72,7 @@ public class FrequencyChart extends VerticalLayout
   private final OptionGroup histogramOptions;
   private final ComboBox trendOptions;
   private FrequencyTable lastTable;
+  private FrequencyQuery lastQuery;
 
   public FrequencyChart(FrequencyResultPanel freqPanel)
   {
@@ -115,15 +122,16 @@ public class FrequencyChart extends VerticalLayout
         // redraw graph with right scale
         if (lastTable != null)
         {
-          setFrequencyData(lastTable);
+          setFrequencyData(lastTable, lastQuery);
         }
       }
     });
     
     trendOptions = new ComboBox("time variable");
-    trendOptions.setNewItemsAllowed(false);
     trendOptions.setHeight("100%");
-    trendOptions.setWidth("-1px");
+    trendOptions.setWidth("400px");
+    trendOptions.setNewItemsAllowed(false);
+    trendOptions.setNullSelectionAllowed(false);
     
     toolLayout = new HorizontalLayout(typeSelection, optionLayout);
     toolLayout.setWidth("100%");
@@ -138,7 +146,7 @@ public class FrequencyChart extends VerticalLayout
 
   }
 
-  public void setFrequencyData(FrequencyTable table)
+  public void setFrequencyData(FrequencyTable table, FrequencyQuery query)
   {
     FrequencyTable clippedTable = table;
     if (clippedTable.getEntries().size() > MAX_NUMBER_OF_CHART_ITEMS)
@@ -197,6 +205,7 @@ public class FrequencyChart extends VerticalLayout
     }
     
     lastTable = clippedTable;
+    lastQuery = query;
     whiteboard.setFrequencyData(clippedTable, (FrequencyWhiteboard.Scale) histogramOptions.
       getValue(), font, fontSize);
     
@@ -216,6 +225,30 @@ public class FrequencyChart extends VerticalLayout
     {
       optionLayout.addComponent(trendOptions);
       optionLayout.setComponentAlignment(trendOptions, Alignment.BOTTOM_LEFT);
+      
+      trendOptions.removeAllItems();
+      if(lastQuery != null)
+      {
+        for(FrequencyTableEntry e : lastQuery.getFrequencyDefinition())
+        {
+          if(e.getType() == FrequencyTableEntryType.meta)
+          {
+            trendOptions.addItem(e);
+          }
+        }
+        // also add the other ones after the metadata
+        for(FrequencyTableEntry e : lastQuery.getFrequencyDefinition())
+        {
+          if(e.getType() != FrequencyTableEntryType.meta)
+          {
+            trendOptions.addItem(e);
+          }
+        }
+      }
+      if(trendOptions.size() > 0)
+      {
+        trendOptions.setValue(trendOptions.getItemIds().iterator().next());
+      }
     }
   }
 
