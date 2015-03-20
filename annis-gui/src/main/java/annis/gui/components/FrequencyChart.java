@@ -22,6 +22,9 @@ import annis.libgui.Helper;
 import annis.libgui.InstanceConfig;
 import annis.service.objects.FrequencyTable;
 import com.vaadin.data.Property;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
@@ -39,17 +42,43 @@ public class FrequencyChart extends VerticalLayout
 
   public static final org.slf4j.Logger log = LoggerFactory.getLogger(
     FrequencyChart.class);
+  
+  public static enum VisType {
+    frequency("Frequency bars"), scatterplot("Scatter Plot");
+    
+    public final String shortName;
+    
+    VisType(String shortName)
+    {
+      this.shortName = shortName;
+    }    
+  }
 
   public static final int MAX_ITEMS = 25;
 
   private FrequencyWhiteboard whiteboard;
+  
+  private final HorizontalLayout toolLayout;
+  
+  private final ComboBox typeSelection;
   private final OptionGroup options;
   private FrequencyTable lastTable;
 
   public FrequencyChart(FrequencyResultPanel freqPanel)
   {
     setSizeFull();
-
+    
+    typeSelection = new ComboBox();
+    typeSelection.addItem(VisType.frequency);
+    typeSelection.setItemCaption(VisType.frequency, VisType.frequency.shortName);
+    typeSelection.addItem(VisType.scatterplot);
+    typeSelection.setItemCaption(VisType.scatterplot, VisType.scatterplot.shortName);
+    typeSelection.setNullSelectionAllowed(false);
+    typeSelection.setValue(VisType.frequency);
+    typeSelection.setNewItemsAllowed(false);
+    typeSelection.setSizeUndefined();
+    
+    
     options = new OptionGroup();
     options.setSizeUndefined();
     options.addStyleName("horizontal-optiongroup");
@@ -57,12 +86,12 @@ public class FrequencyChart extends VerticalLayout
     options.addItem(FrequencyWhiteboard.Scale.LOG10);
     options.setItemCaption(FrequencyWhiteboard.Scale.LINEAR, "linear scale");
     options.setItemCaption(FrequencyWhiteboard.Scale.LOG10, "log<sub>10</sub> scale");
+    options.setSizeUndefined();
     
     options.setHtmlContentAllowed(true);
     options.setImmediate(true);
     options.setValue(FrequencyWhiteboard.Scale.LINEAR);
-    //options.addStyleName("horizontal");
-    
+   
     options.addValueChangeListener(new Property.ValueChangeListener()
     {
       @Override
@@ -75,8 +104,14 @@ public class FrequencyChart extends VerticalLayout
         }
       }
     });
-
-    addComponent(options);
+    
+    toolLayout = new HorizontalLayout(typeSelection, options);
+    toolLayout.setWidth("100%");
+    toolLayout.setHeight("-1px");
+    toolLayout.setComponentAlignment(typeSelection, Alignment.MIDDLE_LEFT);
+    toolLayout.setComponentAlignment(options, Alignment.MIDDLE_LEFT);
+    
+    addComponent(toolLayout);
     InnerPanel panel = new InnerPanel(freqPanel);
     addComponent(panel);
 
