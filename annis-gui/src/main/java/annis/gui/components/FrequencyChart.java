@@ -53,6 +53,7 @@ public class FrequencyChart extends VerticalLayout
     options.addItem(FrequencyWhiteboard.Scale.LOG10);
     options.setItemCaption(FrequencyWhiteboard.Scale.LINEAR, "linear scale");
     options.setItemCaption(FrequencyWhiteboard.Scale.LOG10, "log<sub>10</sub> scale");
+    
     options.setHtmlContentAllowed(true);
     options.setImmediate(true);
     options.setValue(FrequencyWhiteboard.Scale.LINEAR);

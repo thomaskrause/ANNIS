@@ -20,7 +20,6 @@ import annis.gui.objects.FrequencyQuery;
 import annis.libgui.Helper;
 import annis.service.objects.FrequencyTable;
 import annis.service.objects.FrequencyTableEntry;
-import annis.service.objects.FrequencyTableEntryType;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -35,7 +34,6 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
@@ -53,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 import org.slf4j.LoggerFactory;
 
@@ -127,39 +124,11 @@ public class FrequencyResultPanel extends VerticalLayout
         MAX_NUMBER_OF_CHART_ITEMS));
       clippedTable.setSum(table.getSum());
       chart.setCaption(
-        "Showing historgram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
+        "Showing histogram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
     }
     chart.setFrequencyData(clippedTable);
 
 
-  }
-  
-  private String createFieldsString()
-  {    
-    StringBuilder sb = new StringBuilder();
-    
-    ListIterator<FrequencyTableEntry> it = query.getFrequencyDefinition().listIterator();
-    while(it.hasNext())
-    {
-      FrequencyTableEntry e = it.next();
-      
-      sb.append(e.getReferencedNode()).append(":");
-      if(e.getType() == FrequencyTableEntryType.span)
-      {
-        sb.append("tok");
-      }
-      else
-      {
-        sb.append(e.getKey());
-      }
-      
-      if(it.hasNext())
-      {
-        sb.append(",");
-      }
-    }
-    
-    return sb.toString();
   }
   
   private void recreateTable(FrequencyTable table)
