@@ -29,15 +29,13 @@ import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -73,6 +71,7 @@ public class FrequencyChart extends VerticalLayout
   private final ComboBox trendOptions;
   private FrequencyTable lastTable;
   private FrequencyQuery lastQuery;
+  private final Label histogramOverFlowLabel;
 
   public FrequencyChart(FrequencyResultPanel freqPanel)
   {
@@ -139,6 +138,11 @@ public class FrequencyChart extends VerticalLayout
     toolLayout.setExpandRatio(optionLayout, 1.0f);
     
     addComponent(toolLayout);
+    
+    histogramOverFlowLabel = new Label("Showing histogram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
+    histogramOverFlowLabel.setVisible(false);
+    addComponent(histogramOverFlowLabel);
+    
     InnerPanel panel = new InnerPanel(freqPanel);
     addComponent(panel);
 
@@ -148,6 +152,7 @@ public class FrequencyChart extends VerticalLayout
 
   public void setFrequencyData(FrequencyTable table, FrequencyQuery query)
   {
+    histogramOverFlowLabel.setVisible(false);
     FrequencyTable clippedTable = table;
     if (clippedTable.getEntries().size() > MAX_NUMBER_OF_CHART_ITEMS)
     {
@@ -158,8 +163,7 @@ public class FrequencyChart extends VerticalLayout
       clippedTable.setEntries(entries.subList(0,
         MAX_NUMBER_OF_CHART_ITEMS));
       clippedTable.setSum(table.getSum());
-      setCaption(
-        "Showing histogram of top " + MAX_NUMBER_OF_CHART_ITEMS + " results, see table below for complete dataset.");
+      histogramOverFlowLabel.setVisible(true);
     }
     
     String font = "sans-serif";
