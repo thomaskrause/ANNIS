@@ -52,6 +52,7 @@ public class FrequencyChart extends VerticalLayout
 
     options = new OptionGroup();
     options.setSizeUndefined();
+    options.addStyleName("horizontal-optiongroup");
     options.addItem(FrequencyWhiteboard.Scale.LINEAR);
     options.addItem(FrequencyWhiteboard.Scale.LOG10);
     options.setItemCaption(FrequencyWhiteboard.Scale.LINEAR, "linear scale");

@@ -11832,6 +11832,18 @@ div.v-layout.v-horizontal.v-widget {
 	font-family: monospace;
 }
 
+.annis .horizontal-optiongroup .v-select-option {
+	display: inline-block;
+}
+
+.annis .horizontal-optiongroup .v-select-optiongroup {
+	white-space: nowrap;
+}
+
+.annis .horizontal-optiongroup .v-select-option.v-radiobutton {
+	padding-right: 10px;
+}
+
 .annis .cm-s-default .cm-string, .annis .cm-s-default .cm-string-2 {
 	color: #811b00;
 }
