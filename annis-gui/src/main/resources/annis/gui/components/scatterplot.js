@@ -74,7 +74,11 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
         },
         mouse : {
           track : true,
-          relative : true
+          relative : true,
+          trackFormatter: function(val) {
+            var t = new Date(1*val.x);
+            return t.toISOString() + " - " + val.series.label + " (" + val.y + ")";
+          }
         },
         legend: {
             position: 'se'  
