@@ -145,7 +145,7 @@ public class FrequencyChart extends VerticalLayout
       public void valueChange(Property.ValueChangeEvent event)
       {
         // redraw graph
-        if (lastTable != null)
+        if (lastTable != null && trendOptions.getValue() != null)
         {
           drawGraph();
         }
