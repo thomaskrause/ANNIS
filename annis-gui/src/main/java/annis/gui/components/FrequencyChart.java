@@ -60,8 +60,11 @@ public class FrequencyChart extends VerticalLayout
   }
 
   public static final int MAX_ITEMS = 25;
+  
+  private final InnerPanel panel;
 
-  private FrequencyWhiteboard whiteboard;
+  private FrequencyWhiteboard histogram;
+  private ScatterplotWhiteboard trend;
   
   private final HorizontalLayout toolLayout;
   private final HorizontalLayout optionLayout;
@@ -70,7 +73,12 @@ public class FrequencyChart extends VerticalLayout
   private final OptionGroup histogramOptions;
   private final ComboBox trendOptions;
   private FrequencyTable lastTable;
+  private FrequencyTable lastClippedTable;
   private FrequencyQuery lastQuery;
+  
+  private String lastFont;
+  private float lastFontSize;
+  
   private final Label histogramOverFlowLabel;
 
   public FrequencyChart(FrequencyResultPanel freqPanel)
@@ -121,7 +129,7 @@ public class FrequencyChart extends VerticalLayout
         // redraw graph with right scale
         if (lastTable != null)
         {
-          setFrequencyData(lastTable, lastQuery);
+          drawGraph();
         }
       }
     });
@@ -131,6 +139,18 @@ public class FrequencyChart extends VerticalLayout
     trendOptions.setWidth("400px");
     trendOptions.setNewItemsAllowed(false);
     trendOptions.setNullSelectionAllowed(false);
+    trendOptions.addValueChangeListener(new Property.ValueChangeListener()
+    {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event)
+      {
+        // redraw graph
+        if (lastTable != null)
+        {
+          drawGraph();
+        }
+      }
+    });
     
     toolLayout = new HorizontalLayout(typeSelection, optionLayout);
     toolLayout.setWidth("100%");
@@ -143,11 +163,25 @@ public class FrequencyChart extends VerticalLayout
     histogramOverFlowLabel.setVisible(false);
     addComponent(histogramOverFlowLabel);
     
-    InnerPanel panel = new InnerPanel(freqPanel);
+    panel = new InnerPanel(freqPanel);
     addComponent(panel);
 
     setExpandRatio(panel, 1.0f);
 
+  }
+  
+  private void drawGraph()
+  {
+    if(typeSelection.getValue() == VisType.trend)
+    {
+      trend.drawGraph(lastTable, lastFont, lastFontSize, lastQuery.getFrequencyDefinition(), 
+      (FrequencyTableEntry) trendOptions.getValue());
+    }
+    else
+    {
+      histogram.drawGraph(lastClippedTable, (FrequencyWhiteboard.Scale) histogramOptions.
+        getValue(), lastFont, lastFontSize);
+    }
   }
 
   public void setFrequencyData(FrequencyTable table, FrequencyQuery query)
@@ -208,12 +242,14 @@ public class FrequencyChart extends VerticalLayout
       }
     }
     
-    lastTable = clippedTable;
-    lastQuery = query;
-    whiteboard.setFrequencyData(clippedTable, (FrequencyWhiteboard.Scale) histogramOptions.
-      getValue(), font, fontSize);
+    this.lastTable = clippedTable;
+    this.lastQuery = query;
+    this.lastFont = font;
+    this.lastFontSize = fontSize;
+    this.lastClippedTable = clippedTable;
     
     updateType();
+    drawGraph();
   }
   
   private void updateType()
@@ -254,6 +290,8 @@ public class FrequencyChart extends VerticalLayout
         trendOptions.setValue(trendOptions.getItemIds().iterator().next());
       }
     }
+    
+    panel.setContentByType();
   }
 
   /**
@@ -265,11 +303,29 @@ public class FrequencyChart extends VerticalLayout
     public InnerPanel(FrequencyResultPanel freqPanel)
     {
       setSizeFull();
+
+      histogram = new FrequencyWhiteboard(freqPanel);
+      histogram.addStyleName(Helper.CORPUS_FONT_FORCE);
+
+      trend = new ScatterplotWhiteboard(freqPanel);
+      trend.addStyleName(Helper.CORPUS_FONT_FORCE);
       
-      whiteboard = new FrequencyWhiteboard(freqPanel);
-      whiteboard.addStyleName(Helper.CORPUS_FONT_FORCE);
-      
-      setContent(whiteboard);
+      setContentByType();
+
+    }
+
+    private void setContentByType()
+    {
+      if (typeSelection.getValue() == VisType.trend)
+      {
+        setContent(trend);
+      }
+      else
+      {
+        setContent(histogram);
+      }
     }
   }
+  
+  
 }

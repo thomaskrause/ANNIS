@@ -30,59 +30,46 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   };
   
   
-  this.showData = function(labels, values, fontFamily, fontSize) {    
-    if(!labels || !values )
+  this.showData = function(values, fontFamily, fontSize) {    
+    if(!values )
     {
       alert("invalid call to showData");
       return;
     }
     
-    var predefinedYTicks = null;
-    
-    var d = [];
-    for(var i=0; i < values.length; i++)
+    var i=0;
+    var dataSeries = [];
+    for(var key in values)
     {
-      d[i] = [i, values[i]];
-    }
-    
-    var t = [];
-    for(var i=0; i < labels.length; i++)
-    {
-      t[i] = [i];
+       dataSeries[i++] = {
+         data: values[key],
+         label: key
+       }
     }
     
     $(div).remove("canvas");
     
     var graph = Flotr.draw(
       div,
-      [d],
+      dataSeries,
       {
-        bars : {
+        lines: {
+            show: true
+        },
+        points: {
           show: true
         },
         yaxis : {
-          ticks: predefinedYTicks,
-          min: 0
         },
         xaxis : {
-          ticks: t,
-          labelsAngle: 45,
-          tickFormatter: function(i){
-
-            var l = labels[i];
-            if(l.length > 20) {
-              l = l.substring(0,19)+"...";
-            }
-
-            return l;
-          } 
+          labelsAngle: 45
         },
         mouse : {
           track : true,
-          relative : true,
-          trackFormatter: function(val) {
-            return labels[parseInt(val.x)];
-          }
+          relative : true
+        },
+        legend: {
+            position: 'se'  
         },
         HtmlText : false,
         fontSize : fontSize,

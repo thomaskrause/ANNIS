@@ -89,7 +89,7 @@ public class FrequencyWhiteboard extends AbstractJavaScriptComponent implements 
   
   
   
-  public void setFrequencyData(FrequencyTable table, Scale scale, String font, 
+  public void drawGraph(FrequencyTable table, Scale scale, String font, 
     float fontSize)
   {
     labels = new LinkedList<>();

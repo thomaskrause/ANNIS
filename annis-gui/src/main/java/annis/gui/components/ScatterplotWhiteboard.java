@@ -15,15 +15,23 @@
  */
 package annis.gui.components;
 
+import static annis.gui.components.FrequencyWhiteboard.ADDTIONAL_PIXEL_WIDTH;
+import static annis.gui.components.FrequencyWhiteboard.PIXEL_PER_VALUE;
 import annis.gui.frequency.FrequencyResultPanel;
 import annis.service.objects.FrequencyTable;
+import annis.service.objects.FrequencyTableEntry;
+import annis.service.objects.FrequencyTableQuery;
+import com.google.gwt.thirdparty.guava.common.base.Joiner;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.ui.AbstractJavaScriptComponent;
 import com.vaadin.ui.JavaScriptFunction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -41,8 +49,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public static final int ADDTIONAL_PIXEL_WIDTH = 100;
 
   
-  private List<String> labels;
-  private List<Long> values;
+  private Map<String, List<Long[]>> values;
   private String lastFont;
   private float lastFontSize = 10.0f;
   
@@ -50,7 +57,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   {  
     setHeight("100%");
     setWidth("200px");
-    addStyleName("frequency-chart");
+    addStyleName("scatterplot-chart");
     
     addFunction("selectRow", new JavaScriptFunction() {
 
@@ -70,39 +77,64 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public void beforeClientResponse(boolean initial)
   {
     super.beforeClientResponse(initial);
-    if(labels != null && values != null && lastFont != null)
+    if(values != null && lastFont != null)
     {
-      callFunction("showData", labels, values, lastFont, lastFontSize);
+      callFunction("showData", values, lastFont, lastFontSize);
     }
   }
   
   
   
-  public void setFrequencyData(FrequencyTable table, String font, 
-    float fontSize)
+  public void drawGraph(FrequencyTable table, String font, 
+    float fontSize, FrequencyTableQuery query, FrequencyTableEntry timeEntry)
   {
-    labels = new LinkedList<>();
-    values = new LinkedList<>();
+    values = new LinkedHashMap<>();
+    
+    int timeIdx = query.indexOf(timeEntry);
 
+    long minX = Long.MAX_VALUE;
+    long maxX = Long.MIN_VALUE;
+    
     for (FrequencyTable.Entry e : table.getEntries())
     {
-      labels.add(StringUtils.join(e.getTupel(), "/") + " (" + e.getCount() + ")");
-      values.add(e.getCount());
+      String label = getLabelForEntry(e, timeIdx);
+      List<Long[]> series = values.get(label);
+      if(series == null)
+      {
+        series = new LinkedList<>();
+        values.put(label, series);
+      }
+      long x = (long) series.size();
+      minX = Math.min(x, minX);
+      maxX = Math.max(x, maxX);
+      
+      series.add(new Long[]{x, e.getCount()});
     }
-    setWidth(ADDTIONAL_PIXEL_WIDTH + (PIXEL_PER_VALUE * values.size()), Unit.PIXELS);
     lastFont = font;
     lastFontSize = fontSize;
     
-//    callFunction("showData", labels, values, lastScale.desc, lastFont, lastFontSize);
+    setWidth(ADDTIONAL_PIXEL_WIDTH + (PIXEL_PER_VALUE * (maxX-minX)), Unit.PIXELS);
+    
+    callFunction("showData", values, lastFont, lastFontSize);
+  }
+  
+  private String getLabelForEntry(FrequencyTable.Entry e, int timeIdx)
+  {
+    ArrayList<String> tuple = new ArrayList<>(Arrays.asList(e.getTupel()));
+    if(timeIdx >= 0 && timeIdx < tuple.size())
+    {
+      tuple.remove(timeIdx);
+    }
+    return Joiner.on('/').join(tuple);
   }
   
   
   @Override
   public boolean onCompononentLoaded(AbstractClientConnector source)
   {
-    if(labels != null && values != null && lastFont != null)
+    if(values != null && lastFont != null)
     {
-      callFunction("showData", labels, values, lastFont, lastFontSize);
+      callFunction("showData", values, lastFont, lastFontSize);
     }
     return true;
   }
