@@ -102,7 +102,9 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
         
     // bind click event
     graph.observe(div, 'flotr:click', function (position) {
-      theThis.selectRow(position.hit.index);
+      if(position.hit) {
+        theThis.selectRow(position.hit.series.label, new Date(position.hit.x).toISOString());
+      }
     }); 
     
     lastValues = values;

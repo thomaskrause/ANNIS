@@ -61,6 +61,8 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   private String lastFont;
   private float lastFontSize = 10.0f;
   
+  private Table<String, DateTime, Integer> selection2rownum;
+  
   public ScatterplotWhiteboard(final FrequencyResultPanel freqPanel)
   {  
     setHeight("100%");
@@ -70,9 +72,15 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     addFunction("selectRow", new JavaScriptFunction() {
 
       @Override
-      public void call(JSONArray arguments) throws JSONException
+      public void call(JSONArray args) throws JSONException
       {
-        freqPanel.selectRow(arguments.getInt(0));
+        String label = args.getString(0);
+        DateTime date = DateTime.parse(args.getString(1));
+        Integer rowNum = selection2rownum.get(label, date);
+        if (rowNum != null)
+        {
+          freqPanel.selectRow(rowNum);
+        }
       }
     });
     
@@ -100,13 +108,17 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     
     final int timeColumn = query.indexOf(timeEntry);
     
+    selection2rownum = TreeBasedTable.create();
 
+    int i=0;
     for (FrequencyTable.Entry e : table.getEntries())
     {
       String label = getLabelForEntry(e, timeColumn);
       DateTime time = DateTime.parse(e.getTupel()[timeColumn]);
       
       values.put(label, time, e.getCount());
+      selection2rownum.put(label, time, i);
+      i++;
     }
     lastFont = font;
     lastFontSize = fontSize;
