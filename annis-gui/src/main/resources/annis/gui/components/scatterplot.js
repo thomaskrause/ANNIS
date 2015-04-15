@@ -20,31 +20,35 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   var theThis = this;
   
   var lastValues = null;
-  var lastLabels = null;
   var lastFontFamily = "sans-serif";
   var lastFontSize = 10.0;
 
   
   this.onStateChange = function() { 
-    showData(lastLabels, lastValues, lastFontFamily, lastFontSize);
+    showData(lastFontFamily, lastFontSize);
   };
   
   
-  this.showData = function(values, index2time, fontFamily, fontSize) {    
-    if(!values || !index2time )
+  this.showData = function(values, fontFamily, fontSize) {    
+    if(!values )
     {
       alert("invalid call to showData");
       return;
     }
     
-    var i=0;
     var dataSeries = [];
+    
     for(var key in values)
     {
-       dataSeries[i++] = {
-         data: values[key],
+      var timeSeries = values[key];
+      var d = [];
+      for(var t in timeSeries) {
+        d.push([Date.parse(t), timeSeries[t]]);
+      }
+       dataSeries.push({
+         data: d,
          label: key
-       }
+       });
     }
     
     $(div).remove("canvas");
@@ -63,17 +67,9 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
         },
         xaxis : {
           labelsAngle: 45,
-          tickFormatter: function(i){
-
-            var l = index2time[i];
-            if(l) {
-              if(l.length > 20) {
-                l = l.substring(0,19)+"...";
-              }
-              return l;
-            } else {
-              return i;
-            }
+          tickFormatter: function(v){
+            var t = new Date(1*v);
+            return t.toISOString();
           }
         },
         mouse : {
@@ -94,7 +90,6 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
       theThis.selectRow(position.hit.index);
     }); 
     
-    lastLabels = labels;
     lastValues = values;
     lastFontFamily = fontFamily;
     lastFontSize = fontSize;
@@ -103,6 +98,6 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   
   // always resize the canvas to the size of the parent div
   $(window).resize(function() {
-    theThis.showData(lastLabels, lastValues, lastFontFamily, lastFontSize);
+    theThis.showData(lastValues, lastFontFamily, lastFontSize);
   });
 };
