@@ -30,8 +30,8 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   };
   
   
-  this.showData = function(values, fontFamily, fontSize) {    
-    if(!values )
+  this.showData = function(values, index2time, fontFamily, fontSize) {    
+    if(!values || !index2time )
     {
       alert("invalid call to showData");
       return;
@@ -62,7 +62,19 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
         yaxis : {
         },
         xaxis : {
-          labelsAngle: 45
+          labelsAngle: 45,
+          tickFormatter: function(i){
+
+            var l = index2time[i];
+            if(l) {
+              if(l.length > 20) {
+                l = l.substring(0,19)+"...";
+              }
+              return l;
+            } else {
+              return i;
+            }
+          }
         },
         mouse : {
           track : true,

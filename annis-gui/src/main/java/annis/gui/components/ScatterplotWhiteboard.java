@@ -21,6 +21,7 @@ import annis.gui.frequency.FrequencyResultPanel;
 import annis.service.objects.FrequencyTable;
 import annis.service.objects.FrequencyTableEntry;
 import annis.service.objects.FrequencyTableQuery;
+import com.google.common.base.Preconditions;
 import com.google.gwt.thirdparty.guava.common.base.Joiner;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractClientConnector;
@@ -28,10 +29,13 @@ import com.vaadin.ui.AbstractJavaScriptComponent;
 import com.vaadin.ui.JavaScriptFunction;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -48,7 +52,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public static final int PIXEL_PER_VALUE = 45;
   public static final int ADDTIONAL_PIXEL_WIDTH = 100;
 
-  
+  private Map<Double, String> index2time;
   private Map<String, List<Long[]>> values;
   private String lastFont;
   private float lastFontSize = 10.0f;
@@ -79,7 +83,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     super.beforeClientResponse(initial);
     if(values != null && lastFont != null)
     {
-      callFunction("showData", values, lastFont, lastFontSize);
+      callFunction("showData", values, index2time, lastFont, lastFontSize);
     }
   }
   
@@ -88,16 +92,38 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public void drawGraph(FrequencyTable table, String font, 
     float fontSize, FrequencyTableQuery query, FrequencyTableEntry timeEntry)
   {
+    index2time = new LinkedHashMap<>();
     values = new LinkedHashMap<>();
     
-    int timeIdx = query.indexOf(timeEntry);
+    final int timeColumn = query.indexOf(timeEntry);
 
     long minX = Long.MAX_VALUE;
     long maxX = Long.MIN_VALUE;
     
-    for (FrequencyTable.Entry e : table.getEntries())
+    ArrayList<FrequencyTable.Entry> asList = new ArrayList(table.getEntries());
+    
+    if(timeColumn >= 0)
     {
-      String label = getLabelForEntry(e, timeIdx);
+      Collections.sort(asList, new Comparator<FrequencyTable.Entry>()
+      {
+
+        @Override
+        public int compare(FrequencyTable.Entry o1, FrequencyTable.Entry o2)
+        {
+          // use the time column as sorting criterium
+          String v1 = o1.getTupel()[timeColumn];
+          String v2 = o2.getTupel()[timeColumn];
+          
+          DateTime t1 = DateTime.parse(v1);
+          DateTime t2 = DateTime.parse(v2);
+          return t1.compareTo(t2);
+        }
+      });
+    }
+    
+    for (FrequencyTable.Entry e : asList)
+    {
+      String label = getLabelForEntry(e, timeColumn);
       List<Long[]> series = values.get(label);
       if(series == null)
       {
@@ -108,6 +134,18 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
       minX = Math.min(x, minX);
       maxX = Math.max(x, maxX);
       
+      String time = e.getTupel()[timeColumn];
+      String oldTime = index2time.get((double) x);
+      if(oldTime == null)
+      {
+        index2time.put((double) x, time);
+      }
+      else
+      {
+        // validity check, should always be the same
+        Preconditions.checkState(oldTime.equals(time));
+      }
+      
       series.add(new Long[]{x, e.getCount()});
     }
     lastFont = font;
@@ -115,7 +153,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     
     setWidth(ADDTIONAL_PIXEL_WIDTH + (PIXEL_PER_VALUE * (maxX-minX)), Unit.PIXELS);
     
-    callFunction("showData", values, lastFont, lastFontSize);
+    callFunction("showData", values, index2time, lastFont, lastFontSize);
   }
   
   private String getLabelForEntry(FrequencyTable.Entry e, int timeIdx)
@@ -134,7 +172,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   {
     if(values != null && lastFont != null)
     {
-      callFunction("showData", values, lastFont, lastFontSize);
+      callFunction("showData", values, index2time, lastFont, lastFontSize);
     }
     return true;
   }
