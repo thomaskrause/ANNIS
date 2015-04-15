@@ -11,3 +11,4 @@ List of third-party JavaScript dependencies.
      (MIT License) MediaElement.js (http://mediaelementjs.com/)
      (MIT License) Flotr2 (http://www.humblesoftware.com/flotr2/)
      (MIT License) CodeMirror (http://codemirror.net)
+     (MIT License) Moment.js (http://momentjs.com/)

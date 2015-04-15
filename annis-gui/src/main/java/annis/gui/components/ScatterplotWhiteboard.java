@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
@@ -42,14 +43,21 @@ import org.json.JSONException;
  */
 @JavaScript(value =
 {
-  "flotr2.js", "vaadin://jquery.js", "scatterplot.js"
+  "flotr2.js", "vaadin://jquery.js", "moment.js", "scatterplot.js"
 })
 public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implements OnLoadCallbackExtension.Callback
 {
   public static final int PIXEL_PER_VALUE = 45;
   public static final int ADDTIONAL_PIXEL_WIDTH = 100;
 
-  private Table<String, DateTime, Long> values;
+  public enum DateResolution {
+    day,
+    month,
+    year
+  }
+  
+  private Map<String, Map<String, Long>> lastValues;
+  private DateResolution lastResolution = DateResolution.day;
   private String lastFont;
   private float lastFontSize = 10.0f;
   
@@ -77,9 +85,9 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public void beforeClientResponse(boolean initial)
   {
     super.beforeClientResponse(initial);
-    if(values != null && lastFont != null)
+    if(lastValues != null && lastFont != null)
     {
-      callFunction("showData", dateFormattedMap(values), lastFont, lastFontSize);
+      callFunction("showData", lastValues, lastFont, lastFontSize, lastResolution.name());
     }
   }
   
@@ -88,7 +96,7 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public void drawGraph(FrequencyTable table, String font, 
     float fontSize, FrequencyTableQuery query, FrequencyTableEntry timeEntry)
   {
-    values = TreeBasedTable.create();
+    Table<String, DateTime, Long> values = TreeBasedTable.create();
     
     final int timeColumn = query.indexOf(timeEntry);
     
@@ -105,7 +113,10 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     
     setWidth(ADDTIONAL_PIXEL_WIDTH + (PIXEL_PER_VALUE * (values.columnKeySet().size())), Unit.PIXELS);
     
-    callFunction("showData", dateFormattedMap(values), lastFont, lastFontSize);
+    lastValues = dateFormattedMap(values);
+    lastResolution = getResolution(values);
+    
+    callFunction("showData", lastValues, lastFont, lastFontSize, lastResolution.name());
   }
   
   private Map<String, Map<String, Long>> dateFormattedMap(Table<String, DateTime, Long> val)
@@ -127,6 +138,26 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
     return result;
   }
   
+  private DateResolution getResolution(Table<String, DateTime, Long> val)
+  {
+    DateResolution result = DateResolution.year;
+    
+    for(DateTime t : val.columnKeySet())
+    {
+      if(result == DateResolution.year && t.getMonthOfYear() != DateTimeConstants.JANUARY)
+      {
+       result = DateResolution.month;
+      }
+      if(result == DateResolution.month && t.getDayOfMonth() != 1)
+      {
+        result = DateResolution.day;
+        break;
+      }
+    }
+    
+    return result;
+  }
+  
   private String getLabelForEntry(FrequencyTable.Entry e, int timeIdx)
   {
     ArrayList<String> tuple = new ArrayList<>(Arrays.asList(e.getTupel()));
@@ -141,9 +172,9 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   @Override
   public boolean onCompononentLoaded(AbstractClientConnector source)
   {
-    if(values != null && lastFont != null)
+    if(lastValues != null && lastFont != null)
     {
-      callFunction("showData", dateFormattedMap(values), lastFont, lastFontSize);
+      callFunction("showData", lastValues, lastFont, lastFontSize, lastResolution.name());
     }
     return true;
   }

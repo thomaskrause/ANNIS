@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 window.annis_gui_components_ScatterplotWhiteboard = function() {
   var div = this.getElement();
   var theThis = this;
@@ -22,14 +21,26 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   var lastValues = null;
   var lastFontFamily = "sans-serif";
   var lastFontSize = 10.0;
+  var lastDateResolution = null;
 
+  this.date2String = function(date, dateResolution) {
+    if(dateResolution === 'year') {
+      return moment(date).format("YYYY");
+    } else if (dateResolution === 'month') {
+      return moment(date).format("YYYY-MM");
+    } else if(dateResolution === 'day') {
+      return moment(date).format("YYYY-MM-DD");
+    } else {
+      return moment(date).format("YYYY-MM-DD");
+    }
+  };
   
   this.onStateChange = function() { 
-    showData(lastFontFamily, lastFontSize);
+    showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
   };
   
   
-  this.showData = function(values, fontFamily, fontSize) {    
+  this.showData = function(values, fontFamily, fontSize, dateResolution) {    
     if(!values )
     {
       alert("invalid call to showData");
@@ -69,7 +80,7 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
           labelsAngle: 45,
           tickFormatter: function(v){
             var t = new Date(1*v);
-            return t.toISOString();
+            return theThis.date2String(t, dateResolution);
           }
         },
         mouse : {
@@ -77,7 +88,7 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
           relative : true,
           trackFormatter: function(val) {
             var t = new Date(1*val.x);
-            return t.toISOString() + " - " + val.series.label + " (" + val.y + ")";
+            return theThis.date2String(t, dateResolution) + " - " + val.series.label + " (" + parseInt(val.y) + ")";
           }
         },
         legend: {
@@ -97,11 +108,12 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
     lastValues = values;
     lastFontFamily = fontFamily;
     lastFontSize = fontSize;
+    lastDateResolution = dateResolution;
     
   };
   
   // always resize the canvas to the size of the parent div
   $(window).resize(function() {
-    theThis.showData(lastValues, lastFontFamily, lastFontSize);
+    theThis.showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
   });
 };
