@@ -24,21 +24,16 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
   var lastDateResolution = null;
 
   this.date2String = function(date, dateResolution) {
-    if(dateResolution === 'year') {
+    if(dateResolution === 'years') {
       return moment(date).format("YYYY");
     } else if (dateResolution === 'month') {
       return moment(date).format("YYYY-MM");
-    } else if(dateResolution === 'day') {
+    } else if(dateResolution === 'days') {
       return moment(date).format("YYYY-MM-DD");
     } else {
       return moment(date).format("YYYY-MM-DD");
     }
   };
-  
-  this.onStateChange = function() { 
-    showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
-  };
-  
   
   this.showData = function(values, fontFamily, fontSize, dateResolution) {    
     if(!values )
@@ -62,6 +57,22 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
        });
     }
     
+    // calculate our own ticks since the flotr way of doing it is broken for historical dates
+    var xTicks = []
+    var startDate = moment(d[0][0]).startOf(dateResolution);
+    var endDate = moment(d[d.length-1][0]).endOf(dateResolution);
+    var diffDate = endDate.diff(startDate, dateResolution);
+    var tickSteps = diffDate / 8; // display at least 8 ticks + start and end
+    xTicks.push(startDate.valueOf());
+    
+    var tick = startDate.clone();
+    while(tick.isBefore(endDate)) {
+      xTicks.push(tick.valueOf());
+      tick.add(tickSteps, dateResolution);
+    }
+    xTicks.push(endDate.valueOf());
+    
+    
     $(div).remove("canvas");
     
     var graph = Flotr.draw(
@@ -77,6 +88,7 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
         yaxis : {
         },
         xaxis : {
+          ticks: xTicks,
           labelsAngle: 45,
           tickFormatter: function(v){
             var t = new Date(1*v);
@@ -114,8 +126,17 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
     
   };
   
+  
+  this.onStateChange = function() { 
+    if(lastValues) {
+      theThis.showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
+    }
+  };
+  
   // always resize the canvas to the size of the parent div
   $(window).resize(function() {
-    theThis.showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
+    if(lastValues) {
+      theThis.showData(lastValues, lastFontFamily, lastFontSize, lastDateResolution);
+    }
   });
 };

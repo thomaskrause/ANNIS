@@ -51,13 +51,13 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   public static final int ADDTIONAL_PIXEL_WIDTH = 100;
 
   public enum DateResolution {
-    day,
-    month,
-    year
+    days,
+    months,
+    years
   }
   
   private Map<String, Map<String, Long>> lastValues;
-  private DateResolution lastResolution = DateResolution.day;
+  private DateResolution lastResolution = DateResolution.days;
   private String lastFont;
   private float lastFontSize = 10.0f;
   
@@ -152,17 +152,17 @@ public class ScatterplotWhiteboard extends AbstractJavaScriptComponent implement
   
   private DateResolution getResolution(Table<String, DateTime, Long> val)
   {
-    DateResolution result = DateResolution.year;
+    DateResolution result = DateResolution.years;
     
     for(DateTime t : val.columnKeySet())
     {
-      if(result == DateResolution.year && t.getMonthOfYear() != DateTimeConstants.JANUARY)
+      if(result == DateResolution.years && t.getMonthOfYear() != DateTimeConstants.JANUARY)
       {
-       result = DateResolution.month;
+       result = DateResolution.months;
       }
-      if(result == DateResolution.month && t.getDayOfMonth() != 1)
+      if(result == DateResolution.months && t.getDayOfMonth() != 1)
       {
-        result = DateResolution.day;
+        result = DateResolution.days;
         break;
       }
     }
