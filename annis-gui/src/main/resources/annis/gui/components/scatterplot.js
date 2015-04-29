@@ -59,6 +59,7 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
     
     // calculate our own ticks since the flotr way of doing it is broken for historical dates
     var xTicks = []
+ 
     var startDate = moment(d[0][0]).startOf(dateResolution);
     var endDate = moment(d[d.length-1][0]).endOf(dateResolution);
     var diffDate = endDate.diff(startDate, dateResolution);
@@ -66,12 +67,10 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
     xTicks.push(startDate.valueOf());
     
     var tick = startDate.clone();
-    while(tick.isBefore(endDate)) {
+    while(tick.isBefore(endDate) || tick.isSame(endDate)) {
       xTicks.push(tick.valueOf());
       tick.add(tickSteps, dateResolution);
     }
-    xTicks.push(endDate.valueOf());
-    
     
     $(div).remove("canvas");
     
@@ -86,8 +85,11 @@ window.annis_gui_components_ScatterplotWhiteboard = function() {
           show: true
         },
         yaxis : {
+          min: 0
         },
         xaxis : {
+          min: startDate.subtract(1, dateResolution).valueOf(),
+          max: endDate.add(1, dateResolution).valueOf(),
           ticks: xTicks,
           labelsAngle: 45,
           tickFormatter: function(v){
