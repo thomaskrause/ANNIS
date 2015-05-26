@@ -62,13 +62,21 @@ import java.util.Map.Entry;
  *
  * <h2>Mappings:</h2>
  * <ul>
- * <li>Specify the name of the annotation to be visualized in the grid with
- * <b>node_key:name</b>. Note that all grid levels visualize the same annotation
- * name at different hierarchical depths.</li>
+ * <li>
+ * Use <b>annos: anno_name1, anno_name2, anno_name3</b> to specify the annotation layers to visualize.
+ * You can also use regular expressions in the <b>annos</b>
+ * mapping by enclosing it in slashes like in <code>annos:/.*::v.+/,/(ns1::a|ns1::b|ns2::c)/</code>.
+ * Please note that the regular expressions have to match the whole qualified name including the
+ * namespace.
+ * If a node has more than one annotation only the first one matching any of the annotation keys is used
+ * for visualization.
+ * The deprecated mapping <b>node_key</b> allows to speficy only one annotation key instead of several ones.
+ * </li>
  * <li>Specify the name of the base row with the <b>tok_key:name</b>. This is
  * useful, if you want to use a specific annotation layer for instead of the
  * always existing tok layer. E.g. the falko corpora often contain the ZH
  * (Zielhypothesen)-layers.</li>
+ * </ul>
  *
  * @author Benjamin Weißenfels <b.pixeldrama@gmailcom>
  *
