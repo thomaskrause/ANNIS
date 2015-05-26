@@ -22,12 +22,14 @@ import annis.model.AnnisNode;
 import annis.model.Annotation;
 import annis.model.AnnotationGraph;
 import annis.model.Edge;
+import static annis.visualizers.component.tree.TigerTreeVisualizer.TERMINAL_NS_KEY;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -154,19 +156,18 @@ public class AnnisGraphTools implements Serializable
     {
       String terminalNamespace = (input == null ? null : input.getMappings().getProperty(
         TigerTreeVisualizer.TERMINAL_NS_KEY));
-
-      String annoValue = extractAnnotation(n.getNodeAnnotations(),
-        terminalNamespace,
-        terminalName);
+      
+      String annoValue = extractSpan(n, terminalNamespace, terminalName);
       
       return annoValue != null;
     }
   }
+  
   private DirectedGraph<AnnisNode, Edge> extractGraph(AnnotationGraph ag,
     AnnisNode n, String terminalNamespace, String terminalName)
   {
     DirectedGraph<AnnisNode, Edge> graph
-      = new DirectedSparseGraph<AnnisNode, Edge>();
+      = new DirectedSparseGraph<>();
     copyNode(graph, n, terminalNamespace, terminalName);
     for (Edge e : ag.getEdges())
     {
@@ -251,24 +252,39 @@ public class AnnisGraphTools implements Serializable
     return input.getMappings().getProperty("secedge_type", SECEDGE_SUBTYPE);
   }
   
+  public static String extractSpan(AnnisNode n,
+    String terminalNamespace, String terminalName)
+  {
+    if (terminalName == null)
+    {
+      String spannedText = n.getSpannedText();
+      if (spannedText == null || "".equals(spannedText))
+      {
+        spannedText = " ";
+      }
+      return spannedText;
+    }
+    else
+    {
+      Set<String> keys = new LinkedHashSet<>();
+      keys.add(AnnisNode.qName(terminalNamespace, terminalName, "::"));
+      
+      String annoValue = extractAnnotation(n.getNodeAnnotations(),
+        keys);
+      return annoValue;
+    }
+  }
+  
   public static String extractAnnotation(Set<Annotation> annotations,
-    String namespace, String featureName)
+    Set<String> keys)
   {
     for (Annotation a : annotations)
     {
-      if(namespace == null)
+      String annoQName = AnnisNode.qName(a.getNamespace(), a.getName(),
+        "::");
+      if(keys.contains(annoQName) || keys.contains(a.getName()))
       {
-        if (a.getName().equals(featureName))
-        {
-          return a.getValue();
-        }
-      }
-      else
-      {
-        if (a.getNamespace().equals(namespace) && a.getName().equals(featureName))
-        {
-          return a.getValue();
-        }
+        return a.getValue();
       }
     }
     return null;

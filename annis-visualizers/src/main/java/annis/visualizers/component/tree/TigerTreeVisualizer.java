@@ -24,6 +24,8 @@ import annis.model.AnnisNode;
 import annis.model.Annotation;
 import annis.model.Edge;
 import annis.service.ifaces.AnnisResult;
+import annis.visualizers.component.grid.EventExtractor;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -238,47 +240,54 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
       if(AnnisGraphTools.isTerminal(n, input))
       {
         String terminalName = input.getMappings().getProperty(TERMINAL_NAME_KEY);
-        if(terminalName == null)
-        {        
-          
-          String spannedText = n.getSpannedText();
-          if (spannedText == null || "".equals(spannedText))
-          {
-            spannedText = " ";
-          }
-          return spannedText;
-        }
-        else
-        {
-          String terminalNamespace = input.getMappings().getProperty(TERMINAL_NS_KEY);
-          return extractAnnotation(n.getNodeAnnotations(), terminalNamespace, terminalName); 
-        }
+        String terminalNamespace = input.getMappings().getProperty(TERMINAL_NS_KEY);
+        return AnnisGraphTools.extractSpan(n, terminalNamespace, terminalName);
       }
       else
       {
-        return extractAnnotation(n.getNodeAnnotations(),
-          input.getMappings().getProperty("node_anno_ns", input.getNamespace()),
-          input.getMappings().getProperty("node_key", "cat"));
+        return extractAnnotation(n.getNodeAnnotations(), input);
       }
     }
 
     @Override
     public String getLabel(Edge e, VisualizerInput input)
     {
-      return extractAnnotation(e.getAnnotations(),
-        input.getMappings().getProperty("edge_anno_ns", input.getNamespace()),
-        input.getMappings().getProperty("edge_key", "func"));
+      Set<String> keys = new LinkedHashSet<>();
+      keys.add(AnnisNode.qName(
+        input.getMappings().getProperty("edge_anno_ns", input.getNamespace()), 
+        input.getMappings().getProperty("edge_key", "func"), "::"));
+      return extractAnnotation(e.getAnnotations(), keys);
     }
-
-    private String extractAnnotation(Set<Annotation> annotations, String namespace, String featureName)
+    
+    private String extractAnnotation(Set<Annotation> annotations, Set<String> keys)
     {
-      String result = AnnisGraphTools.extractAnnotation(annotations, namespace,
-        featureName);
-      if(result == null)
+      String result = AnnisGraphTools.extractAnnotation(annotations, keys);
+      if (result == null)
       {
         result = "--";
       }
       return result;
+    }
+
+    private String extractAnnotation(Set<Annotation> annotations, VisualizerInput input)
+    {
+      Set<String> keys = new LinkedHashSet<>();
+      
+      String annoNs = input.getMappings().getProperty("node_anno_ns", input.getNamespace());
+      String annoName = input.getMappings().getProperty("node_key");
+      if(annoName != null)
+      {
+        keys.add(AnnisNode.qName(annoNs, annoName, "::"));
+      }
+      
+      keys.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class));
+      if(keys.isEmpty())
+      {
+        // add the default
+        keys.add("cat");
+      }
+      
+      return extractAnnotation(annotations, keys);
     }
   }
 
@@ -335,6 +344,14 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
         width += treeSize.getWidth();
         layouts.add(item);
       }
+    }
+    
+    if(width <= 1.0)
+    {
+      width = 1.0;
+    }
+    if(maxheight <= 1.0) {
+      maxheight = 1.0;
     }
 
     BufferedImage image = new BufferedImage(
