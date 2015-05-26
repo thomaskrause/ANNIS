@@ -238,7 +238,7 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
             result.add(singleKey);
           }
           
-          result.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class));
+          result.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class, false));
           
           // add default if none of the parameters was set
           if(result.isEmpty())

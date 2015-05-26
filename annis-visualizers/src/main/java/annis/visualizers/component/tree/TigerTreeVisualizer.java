@@ -280,7 +280,7 @@ public class TigerTreeVisualizer extends AbstractImageVisualizer
         keys.add(AnnisNode.qName(annoNs, annoName, "::"));
       }
       
-      keys.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class));
+      keys.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class, false));
       if(keys.isEmpty())
       {
         // add the default

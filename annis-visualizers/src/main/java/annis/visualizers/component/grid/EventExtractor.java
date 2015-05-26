@@ -426,7 +426,6 @@ public class EventExtractor {
     }
     return null;
   }
-
   /**
    * Returns the annotations to display according to the mappings configuration.
    *
@@ -440,6 +439,23 @@ public class EventExtractor {
    */
   public static List<String> computeDisplayAnnotations(VisualizerInput input,
           Class<? extends SNode> type) {
+    return computeDisplayAnnotations(input, type, true);
+  }
+
+  /**
+   * Returns the annotations to display according to the mappings configuration.
+   *
+   * This will check the "annos" and "annos_regex" paramters for determining.
+   * the annotations to display. It also iterates over all nodes of the graph
+   * matching the type.
+   *
+   * @param input The input for the visualizer.
+   * @param type Which type of nodes to include
+   * @param fallbackAll If true fallback to include all annotations if there are no mappings
+   * @return
+   */
+  public static List<String> computeDisplayAnnotations(VisualizerInput input,
+          Class<? extends SNode> type, boolean fallbackAll) {
     if (input == null) {
       return new LinkedList<>();
     }
@@ -449,7 +465,7 @@ public class EventExtractor {
     Set<String> annoPool = SToken.class.isAssignableFrom(type) ?
       getAnnotationLevelSet(graph, null, type)
       : getAnnotationLevelSet(graph, input.getNamespace(), type);
-    List<String> annos = new LinkedList<>(annoPool);
+    List<String> annos = fallbackAll ? new LinkedList<>(annoPool) : new LinkedList<String>() ;
 
     String annosConfiguration = input.getMappings().getProperty(
             MAPPING_ANNOS_KEY);
@@ -486,7 +502,7 @@ public class EventExtractor {
     String regexFilterRaw = input.getMappings().getProperty(
             MAPPING_ANNO_REGEX_KEY);
     if (regexFilterRaw != null) {
-      try {
+      try {        
         Pattern regexFilter = Pattern.compile(regexFilterRaw);
         ListIterator<String> itAnnos = annos.listIterator();
         while (itAnnos.hasNext()) {
