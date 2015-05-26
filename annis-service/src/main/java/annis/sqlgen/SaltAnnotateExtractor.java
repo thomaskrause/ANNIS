@@ -1085,13 +1085,19 @@ public class SaltAnnotateExtractor implements AnnotateExtractor<SaltProject>
     int matchIndex = 0;
     for(Match m : matchGroup.getMatches())
     {
-      // get the corresponding SDocument of the salt project    
-      SCorpusGraph corpusGraph = p.getSCorpusGraphs().get(matchIndex);
-      SDocument doc = corpusGraph.getSDocuments().get(0);
-      
-      setMatchedIDs(doc, m);
-      
-      
+      // get the corresponding SDocument of the salt project
+      if (matchIndex < p.getSCorpusGraphs().size())
+      {
+        SCorpusGraph corpusGraph = p.getSCorpusGraphs().get(matchIndex);
+        SDocument doc = corpusGraph.getSDocuments().get(0);
+
+        setMatchedIDs(doc, m);
+      }
+      else
+      {
+        log.error("No corpus graph in result for expected match {}", m.toString());
+      }
+
       matchIndex++;
     }
   }

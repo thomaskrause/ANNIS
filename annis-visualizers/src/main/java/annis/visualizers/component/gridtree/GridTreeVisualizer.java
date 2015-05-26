@@ -40,8 +40,13 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import java.util.TreeMap;
 import static annis.CommonHelper.*;
 import annis.libgui.Helper;
+import annis.visualizers.component.grid.EventExtractor;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SFeature;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 
 /**
@@ -140,7 +145,7 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
 
             // init the traversal
             SGraphTraverseHandler traverse = new Traverse(startIdx, endIdx,
-                    getNodeKey(), input.getNamespace(), table);
+                    getNodeKeys(), input.getNamespace(), table);
 
             // TODO build the grid tree above the token/annotation level
             graph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST,
@@ -217,8 +222,23 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
             return input.getMappings().getProperty("tok_key", "tok");
         }
 
-        private String getNodeKey() {
-            return input.getMappings().getProperty("node_key", "cat");
+        private Set<String> getNodeKeys() {
+          Set<String> result = new LinkedHashSet<>();
+          String singleKey = input.getMappings().getProperty("node_key");
+          if(singleKey != null)
+          {
+            result.add(singleKey);
+          }
+          
+          result.addAll(EventExtractor.computeDisplayAnnotations(input, SStructure.class));
+          
+          // add default if none of the parameters was set
+          if(result.isEmpty())
+          {
+            result.add("cat");
+          }
+          
+          return result;
         }
 
         private boolean hasAnno(SNode n) {
@@ -299,7 +319,7 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
         // the token index of the most left token of the result set
         int startIdx;
         // defines the annotation key. Only nodes with that key are filtered.
-        String annotationKey;
+        Set<String> annotationKeys;
         Map<String, ArrayList<Row>> table;
         // tracks all nodes which was visited.
         Set<SNode> visited = new HashSet<SNode>();
@@ -311,16 +331,16 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
          *
          * @param startIdx the most left token index
          * @param endIdx the most right index
-         * @param nodeKey the annotation key. Only nodes which contain this key
+         * @param nodeKeys the annotation keys. Only nodes which contain one of this keys
          * will be taken into account
          * @param namespace the namespace which triggered this visualization
          * @param table the abstract representation of the table
          */
-        private Traverse(int startIdx, int endIdx, String nodeKey, String namespace,
+        private Traverse(int startIdx, int endIdx, Set<String> nodeKeys, String namespace,
                 Map<String, ArrayList<Row>> table) {
             this.startIdx = startIdx;
             this.endIdx = endIdx;
-            this.annotationKey = nodeKey;
+            this.annotationKeys = nodeKeys;
             this.namespace = namespace;
             this.table = table;
         }
@@ -392,7 +412,7 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
             EList<SAnnotation> annos = n.getSAnnotations();
             if (annos != null) {
                 for (SAnnotation a : annos) {
-                    if (annotationKey.equals(a.getName())) {
+                    if (annotationKeys.contains(a.getName())) {
                         return a;
                     }
                 }
