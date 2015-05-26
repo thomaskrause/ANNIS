@@ -412,7 +412,7 @@ public class GridTreeVisualizer extends AbstractVisualizer<Panel> {
             EList<SAnnotation> annos = n.getSAnnotations();
             if (annos != null) {
                 for (SAnnotation a : annos) {
-                    if (annotationKeys.contains(a.getName())) {
+                    if (annotationKeys.contains(a.getQName()) || annotationKeys.contains(a.getName())) {
                         return a;
                     }
                 }
