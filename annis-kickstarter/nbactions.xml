@@ -10,13 +10,12 @@
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
                 <exec.workingdir>target/annis-kickstarter-${project.version}-distribution/annis-kickstarter-${project.version}</exec.workingdir>
-                <exec.args>-classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFrame</exec.args>
+                <exec.args>-classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFX</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
         <action>
             <actionName>debug</actionName>
-            <preAction>build-with-dependencies</preAction>
             <goals>
                 <goal>process-classes</goal>
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
@@ -24,7 +23,7 @@
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
                 <exec.workingdir>target/annis-kickstarter-${project.version}-distribution/annis-kickstarter-${project.version}</exec.workingdir>
-                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFrame</exec.args>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFX</exec.args>
                 <jpda.listen>true</jpda.listen>
                 <exec.executable>java</exec.executable>
             </properties>
@@ -36,7 +35,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>${profiler.args} -classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFrame</exec.args>
+                <exec.args>-classpath %classpath de.hu_berlin.german.korpling.annis.kickstarter.MainFX</exec.args>
                 <exec.workingdir>target/annis-kickstarter-${project.version}-distribution/annis-kickstarter-${project.version}</exec.workingdir>
                 <profiler.action>profile</profiler.action>
                 <exec.executable>${profiler.java}</exec.executable>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.web.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.hu_berlin.german.korpling.annis.kickstarter.BrowserController">
+   <bottom>
+      <FlowPane BorderPane.alignment="CENTER">
+         <children>
+            <Label text="Status:" />
+            <Label fx:id="status" text="In development :)" />
+         </children>
+      </FlowPane>
+   </bottom>
+   <center>
+      <WebView fx:id="webview" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>
