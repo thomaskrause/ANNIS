@@ -76,7 +76,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>de.hu_berlin.german.korpling.annis.kickstarter.MainFrame</mainClass>
+              <mainClass>de.hu_berlin.german.korpling.annis.kickstarter.MainFX</mainClass>
             </manifest>
             <manifestEntries>
               <Version>${project.version}</Version>

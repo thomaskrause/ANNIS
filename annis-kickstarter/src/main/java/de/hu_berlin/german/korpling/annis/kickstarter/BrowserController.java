@@ -84,8 +84,9 @@ public class BrowserController implements Initializable
         {
           WebEngine web = webview.getEngine();
           web.load("http://localhost:8080/annis-gui/");
+          
+          status.textProperty().setValue("Loaded test");
         });
-        status.textProperty().setValue("Loaded test");
       }
       catch (Exception ex)
       {
