@@ -36,14 +36,16 @@ public class MainFX extends Application
   @Override
   public void start(Stage primaryStage)
   {
+    System.setProperty("annis.home", ".");
 
     Parent root;
     try
     {
       root = FXMLLoader.load(getClass().getResource("Browser.fxml"));
       Scene scene = new Scene(root, 300, 250);
-
+  
       primaryStage.setTitle("ANNIS Kickstarter");
+      
       primaryStage.setScene(scene);
       primaryStage.show();
     }
@@ -54,6 +56,7 @@ public class MainFX extends Application
     }
 
   }
+  
 
   /**
    * @param args the command line arguments

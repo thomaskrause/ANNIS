@@ -19,4 +19,12 @@
    <center>
       <WebView fx:id="webview" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
    </center>
+   <top>
+      <FlowPane BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="debug" mnemonicParsing="false" onMouseClicked="#doDebug" text="Debug" />
+            <Button mnemonicParsing="false" onMouseClicked="#doReset" text="Reset" />
+         </children>
+      </FlowPane>
+   </top>
 </BorderPane>
