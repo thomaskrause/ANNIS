@@ -15,6 +15,20 @@
   <packaging>jar</packaging>
 
   <build>
+    
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+      </resource>
+      <!-- add FXML files -->
+      <resource>
+        <directory>${basedir}/src/main/java</directory>
+        <includes>
+          <include>**/*.fxml</include>
+        </includes>
+      </resource>
+    </resources>  
+    
     <plugins>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -35,12 +49,13 @@
           </execution>
         </executions>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.6</version>
+        <version>2.7</version>
         <configuration>
-          <encoding>${project.build.sourceEncoding}</encoding>
+          <encoding>${project.build.sourceEncoding}</encoding>   
         </configuration>
       </plugin>
 

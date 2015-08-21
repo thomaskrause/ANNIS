@@ -45,6 +45,8 @@ public class BrowserController implements Initializable
   {
     WebEngine web = webview.getEngine();
     web.load("https://korpling.german.hu-berlin.de/annis3-snapshot/");
+    
+    status.textProperty().setValue("Loaded test");
   }  
   
 }
