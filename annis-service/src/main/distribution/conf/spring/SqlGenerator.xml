@@ -233,19 +233,6 @@ limitations under the License.
   
   <bean id="commonLimitOffsetGenerator" class="annis.sqlgen.CommonLimitOffsetGenerator" lazy-init="true" />
 
-  <bean id="annotateInnerQuerySqlGenerator" class="annis.sqlgen.AnnotateInnerQuerySqlGenerator"
-        parent="tableAccessStrategyFactory" lazy-init="true">
-
-    <property name="sortSolutions" value="$dev{annis.annotate.sort-solutions}" />
-
-    <property name="solutionKey" ref="postgreSqlArraySolutionKey"/>
-    <property name="selectClauseSqlGenerator" ref="annotateInnerQuerySqlGenerator" />
-    <property name="fromClauseSqlGenerators" ref="defaultFromClauseGenerators" />
-    <property name="whereClauseSqlGenerators" ref="defaultWhereClauseGenerators" />
-    <property name="orderByClauseSqlGenerator" ref="annotateInnerQuerySqlGenerator" />
-    <property name="limitOffsetClauseSqlGenerator" ref="commonLimitOffsetGenerator" />
-  </bean>
-
   <bean id="annotateOuterQueryTableAccessStrategy" class="annis.sqlgen.TableAccessStrategy" lazy-init="true">
     <property name="columnAliases" ref="annotateOuterQueryColumnAliases"/>
   </bean>
@@ -258,14 +245,6 @@ limitations under the License.
 
   <bean id="islandsPolicy" class="annis.sqlgen.IslandsPolicy" lazy-init="true" >
     <property name="defaultIslandsPolicy" value="${annis.default-islands-policy}" />
-  </bean>
-
-  <bean id="commonAnnotateSqlGenerator" class="annis.sqlgen.CommonAnnotateWithClauseGenerator"
-        parent="tableAccessStrategyFactory" lazy-init="true">
-    <lookup-method name="createSolutionKey" bean="postgreSqlArraySolutionKey"/>
-    
-    <property name="islandsPolicy" ref="islandsPolicy" />
-    <property name="innerQuerySqlGenerator" ref="annotateInnerQuerySqlGenerator" />
   </bean>
 
   <util:list id="defaultFromClauseGenerators">
@@ -338,7 +317,9 @@ limitations under the License.
   
 
   <bean id="graphWithClauseSqlGenerator" class="annis.sqlgen.GraphWithClauseGenerator"
-        parent="commonAnnotateSqlGenerator" lazy-init="true" >
+        parent="tableAccessStrategyFactory" lazy-init="true" >
+    <lookup-method name="createSolutionKey" bean="postgreSqlArraySolutionKey"/>
+    <property name="islandsPolicy" ref="islandsPolicy" />
   </bean>
 
   <bean id="countSqlGenerator" class="annis.sqlgen.CountSqlGenerator"

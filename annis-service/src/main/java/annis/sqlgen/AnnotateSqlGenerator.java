@@ -154,7 +154,7 @@ public class AnnotateSqlGenerator<T>
     }
 
 
-    String overlap = CommonAnnotateWithClauseGenerator.overlapForOneRange(indent + TABSTOP,
+    String overlap = GraphWithClauseGenerator.overlapForOneRange(indent + TABSTOP,
       "solutions.\"min\"", "solutions.\"max\"", "solutions.text", "solutions.corpus",
       tables);
     sb.append(overlap);
@@ -267,8 +267,6 @@ public class AnnotateSqlGenerator<T>
       addSelectClauseAttribute(fields, NODE_TABLE, "is_token");
     }
     addSelectClauseAttribute(fields, NODE_TABLE, "span");
-    addSelectClauseAttribute(fields, NODE_TABLE, "left_token");
-    addSelectClauseAttribute(fields, NODE_TABLE, "right_token");
     addSelectClauseAttribute(fields, NODE_TABLE, "seg_name");
     addSelectClauseAttribute(fields, NODE_TABLE, "seg_index");
     addSelectClauseAttribute(fields, RANK_TABLE, "id");
@@ -289,6 +287,9 @@ public class AnnotateSqlGenerator<T>
     fields.add("(splitanno(edge_qannotext))[1] as edge_annotation_namespace");
     fields.add("(splitanno(edge_qannotext))[2] as edge_annotation_name");
     fields.add("(splitanno(edge_qannotext))[3] as edge_annotation_value");
+    
+    fields.add("lower(token_range) AS left_token");
+    fields.add("(upper(token_range)-1) AS right_token");
 
     
     return fields;
