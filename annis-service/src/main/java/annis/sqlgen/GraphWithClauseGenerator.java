@@ -391,9 +391,12 @@ public class GraphWithClauseGenerator extends TableAccessStrategyFactory
 
     sb.append(indent).append("(");
 
-    sb.append(tables.aliasedColumn(NODE_TABLE, "left_token")).append(" <= ").append(rangeMax)
-      .append(" AND ")
-      .append(tables.aliasedColumn(NODE_TABLE, "right_token")).append(" >= ").append(rangeMin)
+    sb.append("lower(")
+      .append(tables.aliasedColumn(NODE_TABLE, "token_range"))
+      .append(") <= ").append(rangeMax)
+      .append(" AND upper(")
+      .append(tables.aliasedColumn(NODE_TABLE, "token_range"))
+      .append(") > ").append(rangeMin)
       .append(" AND ")
       .append(tables.aliasedColumn(NODE_TABLE, "text_ref")).append(" = ").append(textRef)
       .append(" AND ")
@@ -439,9 +442,11 @@ public class GraphWithClauseGenerator extends TableAccessStrategyFactory
     sb.append(tas.tableName(NODE_TABLE)).append(nodeNr).append(".")
       .append(tas.columnName(NODE_TABLE, "text_ref")).append(" AS ")
       .append("text, ");
-
-    sb.append(tas.tableName(NODE_TABLE)).append(nodeNr).append(".")
-      .append(tas.columnName(NODE_TABLE, "left_token"));
+    
+    sb.append("lower(")
+      .append(tas.tableName(NODE_TABLE)).append(nodeNr).append(".")
+      .append(tas.columnName(NODE_TABLE, "token_range"))
+      .append(")");
 
     if (annotateQueryData.getSegmentationLayer() == null)
     {
@@ -449,8 +454,11 @@ public class GraphWithClauseGenerator extends TableAccessStrategyFactory
     }
     sb.append(" AS ").append("min, ");
 
-    sb.append(tas.tableName(NODE_TABLE)).append(nodeNr).append(".")
-      .append(tas.columnName(NODE_TABLE, "right_token"));
+    sb.append("(upper(")
+      .append(tas.tableName(NODE_TABLE)).append(nodeNr).append(".")
+      .append(tas.columnName(NODE_TABLE, "token_range"))
+      .append(") - 1)");
+    
     if (annotateQueryData.getSegmentationLayer() == null)
     {
       sb.append(" + ").append(annotateQueryData.getRight());
