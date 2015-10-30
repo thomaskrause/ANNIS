@@ -512,7 +512,6 @@ public class TestDefaultWhereClauseGenerator
   public void shouldOptimizeIndirectPrecedenceForIndexOnLeftTokenMinus1()
   {
     // given
-    generator.setOptimizeIndirectPrecedence(true);
     node23.addOutgoingJoin(new Precedence(node42));
     // then
     checkWhereConditions(join("=", "_node23.text_ref", "_node42.text_ref"),
@@ -540,8 +539,6 @@ public class TestDefaultWhereClauseGenerator
   @Test
   public void shouldOptimizeInclusion()
   {
-    // given
-    generator.setOptimizeInclusion(true);
     // when
     node23.addOutgoingJoin(new Inclusion(node42));
     checkWhereConditions(join("=", "_node23.text_ref", "_node42.text_ref"),

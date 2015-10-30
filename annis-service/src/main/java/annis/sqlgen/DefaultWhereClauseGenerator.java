@@ -62,13 +62,8 @@ import org.apache.commons.lang3.Validate;
 public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
 {
 
-  // optimize indirect precedence for index on (leftToken - 1)
-  private boolean optimizeIndirectPrecedence;
   // allow binding of same node to both operands of sibling
   private boolean allowIdenticalSibling;
-  // generate two-sided boundaries for both left and right text borders
-  // for the inclusion operators
-  private boolean optimizeInclusion;
   // where to attach component constraints for edge operators
   // (lhs, rhs or both)
   private String componentPredicates;
@@ -341,49 +336,72 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     int min = join.getMinDistance();
     int max = join.getMaxDistance();
 
-    String left = join.getSegmentationName() == null ? "left_token" : "seg_index";
-    String right = join.getSegmentationName() == null ? "right_token" : "seg_index";
     
     // we are using a special segmentation
-    if(join.getSegmentationName() != null)
+    if (join.getSegmentationName() == null)
     {
-      conditions.add(join("=",  
-        tables(node).aliasedColumn(NODE_TABLE, "seg_name"), 
-        sqlString(join.getSegmentationName()))); 
-      
-      conditions.add(join("=",  
-        tables(target).aliasedColumn(NODE_TABLE, "seg_name"), 
-        sqlString(join.getSegmentationName()))); 
-    }
-    
-    
-    // indirect
-    if (min == 0 && max == 0)
-    {
-      if (optimizeIndirectPrecedence)
+      // indirect
+      if (min == 0 && max == 0)
       {
-        numberJoinOnNode(conditions, node, target, "<=", right,
-          left, -1);
+        joinOnNode(conditions, node, target, "<<", "token_range", "token_range");
       }
+      // exact distance
+      else if (min == max)
+      {
+        if(min == 1)
+        {
+          joinOnNode(conditions, node, target, "-|-", "token_range",
+            "token_range");
+          joinOnNode(conditions, node, target, "<<", "token_range",
+            "token_range");
+        }
+        else
+        {
+          conditions.add(numberJoin("=",
+            "upper(" + tables(node).aliasedColumn(NODE_TABLE, "token_range") + ")", 
+            "lower(" + tables(target).aliasedColumn(NODE_TABLE, "token_range") + ")", -min+1));
+        }
+      }
+      // ranged distance
       else
       {
-        joinOnNode(conditions, node, target, "<", right, left);
+        conditions.add(between(
+          "upper(" + tables(node).aliasedColumn(NODE_TABLE, "token_range") + ")",
+          "lower(" + tables(target).aliasedColumn(NODE_TABLE, "token_range") + ")", 
+          -min+1, -max+1));
       }
-
     }
-    // exact distance
-    else if (min == max)
-    {
-      numberJoinOnNode(conditions, node, target, "=", right,
-        left, -min);
-
-    }
-    // ranged distance
     else
     {
-      betweenJoinOnNode(conditions, node, target, right, left,
-        -min, -max);
+      conditions.add(join("=",
+        tables(node).aliasedColumn(NODE_TABLE, "seg_name"),
+        sqlString(join.getSegmentationName())));
+
+      conditions.add(join("=",
+        tables(target).aliasedColumn(NODE_TABLE, "seg_name"),
+        sqlString(join.getSegmentationName())));
+
+      // indirect
+      if (min == 0 && max == 0)
+      {
+        joinOnNode(conditions, node, target, "<", "seg_index", "seg_index");
+      }
+      // exact distance
+      else if (min == max)
+      {
+        numberJoinOnNode(conditions, node, target, "=", "seg_index", "seg_index",
+          -min);
+      }
+      // ranged distance
+      else
+      {
+        betweenJoinOnNode(conditions, node, target, "seg_index", "seg_index",
+          -min, -max);
+      }
     }
+    
+    
+   
   }
 
     @Override
@@ -414,15 +432,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     // indirect
     if (min == 0 && max == 0)
     {
-      if (optimizeIndirectPrecedence)
-      {
-        numberMirrorJoinOnNode(conditions, node, target, "<=", right,
-          left, -1);
-      }
-      else
-      {
-        mirrorJoinOnNode(conditions, node, target, "<", right, left);
-      }
+      mirrorJoinOnNode(conditions, node, target, "<<", right, left);
 
     }
     // exact distance
@@ -446,9 +456,12 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode target, QueryNode node, RightOverlap join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, ">=", "right_token", "right_token");
-    joinOnNode(conditions, target, node, ">=", "right_token", "left_token");
-    joinOnNode(conditions, node, target, ">=", "left_token", "left_token");
+    
+    // overlaps
+    joinOnNode(conditions, node, target, "&&", "token_range", "token_range");
+    // does not extend to the left of
+    joinOnNode(conditions, node, target, "&>", "token_range", "token_range");
+   
     notReflexive(conditions, node, target);
   }
 
@@ -457,9 +470,10 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode target, QueryNode node, LeftOverlap join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "<=", "left_token", "left_token");
-    joinOnNode(conditions, target, node, "<=", "left_token", "right_token");
-    joinOnNode(conditions, node, target, "<=", "right_token", "right_token");
+    // overlaps
+    joinOnNode(conditions, node, target, "&&", "token_range", "token_range");
+    // does not extend to the right of
+    joinOnNode(conditions, node, target, "&<", "token_range", "token_range");
     notReflexive(conditions, node, target);
   }
 
@@ -468,8 +482,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode target, Overlap join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "<=", "left_token", "right_token");
-    joinOnNode(conditions, target, node, "<=", "left_token", "right_token");
+    joinOnNode(conditions, node, target, "&&", "token_range", "token_range");
     notReflexive(conditions, node, target);
   }
 
@@ -478,13 +491,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode node, QueryNode target, Inclusion join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "<=", "left_token", "left_token");
-    joinOnNode(conditions, node, target, ">=", "right_token", "right_token");
-    if (optimizeInclusion)
-    {
-      joinOnNode(conditions, target, node, "<=", "left_token", "right_token");
-      joinOnNode(conditions, target, node, ">=", "right_token", "left_token");
-    }
+    joinOnNode(conditions, node, target, "&>", "token_range", "token_range");
     notReflexive(conditions, node, target);
   }
 
@@ -493,7 +500,9 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode node, QueryNode target, RightAlignment join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "=", "right_token", "right_token");
+    conditions.add(join("=",
+      "upper(" + tables(node).aliasedColumn(NODE_TABLE, "token_range") + ")", 
+      "upper(" + tables(target).aliasedColumn(NODE_TABLE, "token_range") + ")"));
     notReflexive(conditions, node, target);
   }
 
@@ -502,7 +511,9 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode node, QueryNode target, LeftAlignment join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "=", "left_token", "left_token");
+    conditions.add(join("=",
+      "lower(" + tables(node).aliasedColumn(NODE_TABLE, "token_range") + ")", 
+      "lower(" + tables(target).aliasedColumn(NODE_TABLE, "token_range") + ")"));
     notReflexive(conditions, node, target);
   }
 
@@ -536,29 +547,8 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode target, SameSpan join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "=", "left_token", "left_token");
-    
-    TableAccessStrategy tasSource = tables(node);
-    TableAccessStrategy tasTarget = tables(target);
-    
-    String spanLengthSource = 
-      "("
-      + tasSource.aliasedColumn(NODE_TABLE, "right_token") 
-      + " - " 
-      + tasSource.aliasedColumn(NODE_TABLE, "left_token")
-      + ")";
-    
-    String spanLengthTarget = 
-      "("
-      + tasTarget.aliasedColumn(NODE_TABLE, "right_token") 
-      + " - " 
-      + tasTarget.aliasedColumn(NODE_TABLE, "left_token")
-      + ")";
-    
-    conditions.add(spanLengthSource + " = " + spanLengthTarget);
-    
+    joinOnNode(conditions, node, target, "=", "token_range", "token_range");
     notReflexive(conditions, node, target);
-    //joinOnNode(conditions, node, target, "=", "right_token", "right_token");
   }
 
   @Override
@@ -817,16 +807,6 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
       sqlString(node.getSpannedText(), textMatching)));
   }
 
-  public boolean isOptimizeIndirectPrecedence()
-  {
-    return optimizeIndirectPrecedence;
-  }
-
-  public void setOptimizeIndirectPrecedence(boolean optimizeIndirectPrecedence)
-  {
-    this.optimizeIndirectPrecedence = optimizeIndirectPrecedence;
-  }
-
   public boolean isAllowIdenticalSibling()
   {
     return allowIdenticalSibling;
@@ -836,17 +816,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
   {
     this.allowIdenticalSibling = allowIdenticalSibling;
   }
-
-  public boolean isOptimizeInclusion()
-  {
-    return optimizeInclusion;
-  }
-
-  public void setOptimizeInclusion(boolean optimizeInclusion)
-  {
-    this.optimizeInclusion = optimizeInclusion;
-  }
-
+  
   public String getComponentPredicates()
   {
     return componentPredicates;
