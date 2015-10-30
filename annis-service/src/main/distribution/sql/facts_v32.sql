@@ -71,7 +71,7 @@ FROM
     _node.token_index AS token_index,
     (_node.token_index IS NOT NULL AND _node.seg_name IS NULL) AS is_token,
     _node.span AS span,
-    int4range(_node.left_token, _node.right_token) AS token_range,
+    int4range(_node.left_token, _node.right_token, '[]') AS token_range,
     _node.seg_name AS seg_name,
     _node.seg_index AS seg_index,
 
