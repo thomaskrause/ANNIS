@@ -19,10 +19,10 @@ CREATE INDEX idx__facts_left__:id
   ("left", corpus_ref)
   WITH (FILLFACTOR=100);
 
-CREATE INDEX idx__facts_left_token__:id
+CREATE INDEX idx__facts_token_range__:id
   ON facts_:id
   USING btree
-  (left_token, corpus_ref)
+  (token_range, corpus_ref, text_ref)
   WITH (FILLFACTOR=100);
 
 CREATE INDEX idx__facts_node_annotext__:id
@@ -55,12 +55,6 @@ CREATE INDEX idx__facts_right__:id
   ("right", corpus_ref)
   WITH (FILLFACTOR=100);
 
-
-CREATE INDEX idx__facts_right_token__:id
-  ON facts_:id
-  USING btree
-  (right_token, corpus_ref)
-  WITH (FILLFACTOR=100);
 
 CREATE INDEX idx__facts_root__:id
   ON facts_:id
@@ -105,11 +99,11 @@ CREATE INDEX idx__facts_text_ref_index__:id
   WITH (FILLFACTOR=100);
 
 ----- 2nd query
-CREATE INDEX idx__2nd_query_:id ON facts_:id (corpus_ref, text_ref,left_token, right_token)
+CREATE INDEX idx__2nd_query_:id ON facts_:id (corpus_ref, text_ref, token_range)
   WITH (FILLFACTOR=100);
 
 -- optimize the select distinct
-CREATE INDEX idx_distinct_helper_:id ON facts_:id(id, corpus_ref, text_ref, left_token, right_token)
+CREATE INDEX idx_distinct_helper_:id ON facts_:id(id, corpus_ref, text_ref, token_range)
   WITH (FILLFACTOR=100);
 
 -- allow simple searches (node, tok etc)
