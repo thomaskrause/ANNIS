@@ -108,8 +108,6 @@ limitations under the License.
       <util:map>
         <entry key="name" value="node_name" />
         <entry key="namespace" value="node_namespace" />
-        <entry key="left_token" value="lower(token_range)" />
-        <entry key="right_token" value="(upper(token_range)-1)" />
       </util:map>
     </entry>
     <entry key="rank">
