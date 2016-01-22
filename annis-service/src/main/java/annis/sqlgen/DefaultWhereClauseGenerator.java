@@ -516,7 +516,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
     joinOnNode(conditions, node, target, "=", "left_token", "left_token");
-    joinOnNode(conditions, node, target, "=", "right_token", "right_token");
+    joinOnNode(conditions, node, target, "=", "token_range_length", "token_range_length");
     notReflexive(conditions, node, target);
   }
 
