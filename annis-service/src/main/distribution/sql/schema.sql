@@ -82,6 +82,7 @@ CREATE TABLE facts (
   span varchar COLLATE "C",
   left_token integer,
   right_token integer,
+  token_range_length integer,
   seg_name varchar COLLATE "C",
   seg_index integer,
   rank_id bigint,
