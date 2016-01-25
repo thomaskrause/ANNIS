@@ -425,8 +425,12 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     QueryNode target, Overlap join, QueryData queryData)
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
-    joinOnNode(conditions, node, target, "<=", "left_token", "right_token");
-    joinOnNode(conditions, target, node, "<=", "left_token", "right_token");
+    
+    conditions.add(join("<=", tables(node).aliasedColumn(NODE_TABLE, "left_token"),
+      rightTokenExp(target)));
+    conditions.add(join("<=", tables(target).aliasedColumn(NODE_TABLE, "left_token"),
+      rightTokenExp(node)));
+    
     notReflexive(conditions, node, target);
   }
 
