@@ -30,7 +30,7 @@ INSERT INTO facts_:id
   span,
   left_token,
   right_token,
-  token_range_length,
+  right_token_diff,
   seg_name,
   seg_index,
   rank_id,
@@ -73,7 +73,7 @@ FROM
     _node.span AS span,
     _node.left_token AS left_token,
     _node.right_token AS right_token,
-    (_node.right_token - _node.left_token + 1) AS token_range_length,
+    (_node.right_token - _node.left_token) AS right_token_diff,
     _node.seg_name AS seg_name,
     _node.seg_index AS seg_index,
 

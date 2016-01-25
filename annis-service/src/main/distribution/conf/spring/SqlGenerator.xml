@@ -27,7 +27,7 @@ limitations under the License.
   
   <!-- Configure use of BETWEEN SYMMETRIC -->
   <bean
-    class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" lazy-init="true">
+    class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" lazy-init="false">
     <property name="targetClass">
       <value>annis.sqlgen.SqlConstraints</value>
     </property>
@@ -41,7 +41,7 @@ limitations under the License.
 
   <!-- Configure BETWEEN workaround for MonetDB -->
   <bean
-    class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" lazy-init="true">
+    class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" lazy-init="false">
     <property name="targetClass">
       <value>annis.sqlgen.SqlConstraints</value>
     </property>

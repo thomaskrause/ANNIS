@@ -25,10 +25,10 @@ CREATE INDEX idx__facts_left_token__:id
   (left_token, corpus_ref, text_ref)
   WITH (FILLFACTOR=100);
 
-CREATE INDEX idx__facts_token_range_length__:id
+CREATE INDEX idx__facts_right_token_diff__:id
   ON facts_:id
   USING btree
-  (token_range_length, corpus_ref, text_ref)
+  (right_token_diff, corpus_ref, text_ref)
   WITH (FILLFACTOR=100);
 
 CREATE INDEX idx__facts_node_annotext__:id

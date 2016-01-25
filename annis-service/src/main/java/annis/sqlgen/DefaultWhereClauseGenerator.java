@@ -318,8 +318,9 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     int min = join.getMinDistance();
     int max = join.getMaxDistance();
 
-    String left = join.getSegmentationName() == null ? "left_token" : "seg_index";
-    String right = join.getSegmentationName() == null ? "right_token" : "seg_index";
+    String leftIndex = join.getSegmentationName() == null ? rightTokenExp(node) : tables(node).aliasedColumn(NODE_TABLE, "seg_name");
+    String rightIndex = join.getSegmentationName() == null ? tables(target).aliasedColumn(NODE_TABLE, "left_token") 
+      : tables(target).aliasedColumn(NODE_TABLE, "seg_name");
     
     // we are using a special segmentation
     if(join.getSegmentationName() != null)
@@ -337,20 +338,17 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     // indirect
     if (min == 0 && max == 0)
     {
-      joinOnNode(conditions, node, target, "<", right, left);
+      conditions.add(join("<", leftIndex, rightIndex));
     }
     // exact distance
     else if (min == max)
     {
-      numberJoinOnNode(conditions, node, target, "=", right,
-        left, -min);
-
+      conditions.add(numberJoin("=", rightIndex, leftIndex, min));
     }
     // ranged distance
     else
     {
-      betweenJoinOnNode(conditions, node, target, right, left,
-        -min, -max);
+      conditions.add(between(rightIndex, leftIndex, min, max));
     }
   }
 
@@ -496,7 +494,7 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
   {
     joinOnNode(conditions, node, target, "=", "text_ref", "text_ref");
     joinOnNode(conditions, node, target, "=", "left_token", "left_token");
-    joinOnNode(conditions, node, target, "=", "token_range_length", "token_range_length");
+    joinOnNode(conditions, node, target, "=", "right_token_diff", "right_token_diff");
     notReflexive(conditions, node, target);
   }
 
@@ -738,6 +736,13 @@ public class DefaultWhereClauseGenerator extends AbstractWhereClauseGenerator
     conditions.add(join(textMatching.sqlOperator(),
       tables(node).aliasedColumn(NODE_TABLE, "span"),
       sqlString(node.getSpannedText(), textMatching)));
+  }
+  
+  private String rightTokenExp(QueryNode node)
+  {
+    TableAccessStrategy tas = tables(node);
+    return "(" +  tas.aliasedColumn(NODE_TABLE, "left_token") + " + " 
+      + tas.aliasedColumn(NODE_TABLE, "right_token_diff") + ")";
   }
 
   public boolean isAllowIdenticalSibling()

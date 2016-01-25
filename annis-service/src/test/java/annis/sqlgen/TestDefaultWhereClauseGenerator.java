@@ -627,7 +627,7 @@ public class TestDefaultWhereClauseGenerator
     checkWhereConditions(node23,
       "_annotation23_1.qannotext LIKE 'namespace1:name1:%'",
       "_annotation23_2.qannotext LIKE 'namespace2:name2:%'",
-      "_node23.right_token = _node42.left_token - 1",
+      "_node42.left_token = (_node23.left_token + _node23.right_token_diff) + 1",
       "_node23.text_ref = _node42.text_ref"
     );
     checkWhereConditions(node42,
@@ -698,7 +698,7 @@ public class TestDefaultWhereClauseGenerator
     node23.addOutgoingJoin(new SameSpan(node42));
     checkWhereConditions(join("=", "_node23.text_ref", "_node42.text_ref"),
         join("=", "_node23.left_token", "_node42.left_token"),
-        join("=", "_node23.token_range_length", "_node42.token_range_length"),
+        join("=", "_node23.token_range_diff", "_node42.token_range_diff"),
         join("<>", "_node23.id", "_node42.id")
     );
   }
