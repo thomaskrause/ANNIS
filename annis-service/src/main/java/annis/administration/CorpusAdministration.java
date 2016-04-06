@@ -62,6 +62,7 @@ public class CorpusAdministration
 
   private AdministrationDao administrationDao;
   private DeleteCorpusDao deleteCorpusDao;
+  private DocumentManagementDao documentManagementDao;
 
   private SchemeFixer schemeFixer;
 
@@ -91,6 +92,11 @@ public class CorpusAdministration
     log.info("Deleting corpora: " + ids);
     deleteCorpusDao.deleteCorpora(ids, true);
     log.info("Finished deleting corpora: " + ids);
+  }
+  
+  public void deleteDocument(String toplevelName, String documentName)
+  {
+    documentManagementDao.deleteDocument(toplevelName, documentName);
   }
 
   public void cleanupData()
@@ -958,6 +964,17 @@ public class CorpusAdministration
   {
     this.deleteCorpusDao = deleteCorpusDao;
   }
+
+  public DocumentManagementDao getDocumentManagementDao()
+  {
+    return documentManagementDao;
+  }
+
+  public void setDocumentManagementDao(DocumentManagementDao documentManagementDao)
+  {
+    this.documentManagementDao = documentManagementDao;
+  }
+  
   
   
 

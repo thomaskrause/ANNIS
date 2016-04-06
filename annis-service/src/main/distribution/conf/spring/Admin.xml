@@ -17,6 +17,7 @@
     <property name="statusMailSender" value="${annis.mail-sender}"/>
     <property name="schemeFixer" ref="schemeFixer" />
     <property name="deleteCorpusDao" ref="deleteCorpusDao" />
+    <property name="documentManagementDao" ref="documentManagementDao" />
   </bean>
 
   <!-- AnnisAdminRunner -->

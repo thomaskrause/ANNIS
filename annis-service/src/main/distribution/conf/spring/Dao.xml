@@ -211,6 +211,11 @@
   
  </bean>
  
+ <bean id="documentManagementDao" class="annis.administration.DocumentManagementDao" lazy-init="true"
+      parent="adminDaoBase">
+  
+ </bean>
+ 
  <bean id="administrationDao" class="annis.administration.AdministrationDao" lazy-init="true"
         parent="adminDaoBase">
     

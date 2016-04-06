@@ -15,7 +15,22 @@
  */
 package annis.administration;
 
+import com.google.common.base.Preconditions;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Objects;
+import org.corpus_tools.salt.SaltFactory;
+import org.corpus_tools.salt.common.SCorpus;
+import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.PreparedStatementCallback;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.SqlProvider;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -28,12 +43,39 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
   /**
    * Deletes a document
    * @param toplevelCorpus
-   * @param document 
+   * @param documentName 
    */
   @Transactional
-  public void deleteDocument(String toplevelCorpus, String document)
+  public void deleteDocument(String toplevelCorpus, String documentName)
   {
-    // TODO: implement
+    Preconditions.checkNotNull(toplevelCorpus);
+    Preconditions.checkNotNull(documentName);
+    
+    // get the current corpus graph from the database
+    CorpusGraphMapper mapper = new CorpusGraphMapper(toplevelCorpus);
+    SCorpusGraph corpusGraph = getJdbcTemplate().query(mapper.getSql(), mapper, mapper);
+   
+    SDocument docToRemove = null;
+    for(SDocument doc : corpusGraph.getDocuments())
+    {
+      if(documentName.equals(doc.getName()))
+      {
+        docToRemove = doc;
+        break;
+      }
+    }
+    if(docToRemove != null)
+    {
+      // remove the document from our internal representation
+      corpusGraph.removeNode(docToRemove);
+      
+      // TODO: write updated corpus graph in corpus table
+      
+      // TODO: delete from facts table
+      // TODO: update node IDs etc
+      
+      
+    }
   }
   
     /**
@@ -115,5 +157,50 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
 //      addCorpusAlias(corpusID, aliasName);
 //    }
 //    return true; 
+  }
+  
+  private static class CorpusGraphMapper implements ResultSetExtractor<SCorpusGraph>,
+    SqlProvider, PreparedStatementSetter
+  {
+    
+    private final String toplevelCorpusName;
+
+    public CorpusGraphMapper(String toplevelCorpus)
+    {
+      this.toplevelCorpusName = toplevelCorpus;
+    }
+
+    
+    
+    @Override
+    public SCorpusGraph extractData(ResultSet rs) throws SQLException, DataAccessException
+    {
+      SCorpusGraph cg = SaltFactory.createSCorpusGraph();
+      
+      // the first row must always contain the toplevel corpus entry
+      Boolean toplevel = rs.getBoolean("top_level");
+      Preconditions.checkArgument(Objects.equals(toplevel, Boolean.TRUE));
+      Preconditions.checkArgument(Objects.equals(rs.getString("name"), toplevelCorpusName));
+      
+      SCorpus topCorpus = cg.createCorpus(null, toplevelCorpusName);
+      
+      return cg;
+    }
+
+    @Override
+    public String getSql()
+    {
+      return "SELECT sub.name, sub.type, sub.pre, sub.post, sub.top_level\n"
+        + "FROM corpus AS top, corpus AS sub\n"
+        + "WHERE top.name=? AND sub.pre >= top.pre AND sub.post <= top.post\n"
+        + "ORDER BY sub.pre, sub.post";
+    }
+
+    @Override
+    public void setValues(PreparedStatement ps) throws SQLException
+    {
+      ps.setString(1, toplevelCorpusName);
+    }
+
   }
 }

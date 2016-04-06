@@ -114,6 +114,10 @@ public class AnnisAdminRunner extends AnnisBaseRunner
     {
       doDelete(commandArgs);
     }
+    else if ("delete-document".equals(command))
+    {
+      doDeleteDocument(commandArgs);
+    }
     else if ("copy".equals(command))
     {
       doCopy(commandArgs);
@@ -468,6 +472,17 @@ public class AnnisAdminRunner extends AnnisBaseRunner
       }
     }
     corpusAdministration.deleteCorpora(ids);
+  }
+  
+  
+  private void doDeleteDocument(List<String> commandArgs)
+  {
+    if (commandArgs.size() != 2)
+    {
+      throw new UsageException("What document in which corpus do you want to delete?");
+    }
+
+    corpusAdministration.deleteDocument(commandArgs.get(0), commandArgs.get(1));
   }
   
   private void doCopy(List<String> commandArgs)
