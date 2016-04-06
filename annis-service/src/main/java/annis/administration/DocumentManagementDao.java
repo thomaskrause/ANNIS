@@ -16,18 +16,18 @@
 package annis.administration;
 
 import com.google.common.base.Preconditions;
-import java.sql.Connection;
+import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.PreparedStatementCallback;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.SqlProvider;
@@ -183,19 +183,56 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
       Boolean toplevel = rs.getBoolean("top_level");
       Preconditions.checkState(Objects.equals(toplevel, Boolean.TRUE));
       Preconditions.checkState(Objects.equals(rs.getString("name"), toplevelCorpusName));
-      
+
       SCorpus topCorpus = cg.createCorpus(null, toplevelCorpusName);
+      Map<Integer, SCorpus> id2corpus = new HashMap<>();
+      id2corpus.put(rs.getInt("id"), topCorpus);
+      
+      while(rs.next())
+      {
+        // there should be only one top-level corpus
+        Preconditions.checkState(Objects.equals(rs.getBoolean("top_level"), Boolean.FALSE));
+        Integer[] ancestors = (Integer[]) rs.getArray("a").getArray();
+        SCorpus parent = id2corpus.get(ancestors[1]);
+        Preconditions.checkState(parent != null);
+        if("DOCUMENT".equals(rs.getString("type")))
+        {
+          parent.getGraph().createDocument(parent, rs.getString("name"));
+        }
+        else
+        {
+          // subcorpus
+          SCorpus subcorpus = parent.getGraph().createCorpus(parent, rs.getString("name"));
+          id2corpus.put(rs.getInt("id"), subcorpus);
+        }
+      }
       
       return cg;
     }
+    
+   
+    
 
     @Override
     public String getSql()
     {
-      return "SELECT sub.name, sub.type, sub.pre, sub.post, sub.top_level\n"
-        + "FROM corpus AS top, corpus AS sub\n"
-        + "WHERE top.name=? AND sub.pre >= top.pre AND sub.post <= top.post\n"
-        + "ORDER BY sub.pre, sub.post";
+      return "WITH subcorpora AS\n" +
+        "(\n" +
+        "SELECT sub.*\n" +
+        "FROM corpus AS top, corpus AS sub\n" +
+        "WHERE\n" +
+        "  top.name=? AND top.top_level IS TRUE\n" +
+        "  AND sub.pre >= top.pre AND sub.post <= top.post\n" +
+        "),\n" +
+        "id_with_ancestors AS (\n" +
+        "SELECT array_agg(ancestors.id order by ancestors.pre DESC) AS a, o.id FROM subcorpora AS o, subcorpora AS ancestors\n" +
+        "WHERE ancestors.pre <= o.pre AND ancestors.post >= o.post\n" +
+        "GROUP BY o.id\n" +
+        ")\n" +
+        "SELECT c.id AS id, c.\"name\" AS \"name\", anc.a AS a, c.top_level AS top_level, c.\"type\" AS \"type\"\n" +
+        "FROM id_with_ancestors AS anc, corpus AS c\n" +
+        "WHERE c.id=anc.id\n" +
+        "ORDER BY c.pre";
     }
 
     @Override
