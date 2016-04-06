@@ -177,10 +177,12 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     {
       SCorpusGraph cg = SaltFactory.createSCorpusGraph();
       
+      Preconditions.checkState(rs.next());
+      
       // the first row must always contain the toplevel corpus entry
       Boolean toplevel = rs.getBoolean("top_level");
-      Preconditions.checkArgument(Objects.equals(toplevel, Boolean.TRUE));
-      Preconditions.checkArgument(Objects.equals(rs.getString("name"), toplevelCorpusName));
+      Preconditions.checkState(Objects.equals(toplevel, Boolean.TRUE));
+      Preconditions.checkState(Objects.equals(rs.getString("name"), toplevelCorpusName));
       
       SCorpus topCorpus = cg.createCorpus(null, toplevelCorpusName);
       
