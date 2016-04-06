@@ -27,6 +27,11 @@ import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.core.GraphTraverseHandler;
+import org.corpus_tools.salt.core.SGraph;
+import org.corpus_tools.salt.core.SNode;
+import org.corpus_tools.salt.core.SProcessingAnnotation;
+import org.corpus_tools.salt.core.SRelation;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -54,7 +59,7 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     // get the current corpus graph from the database
     CorpusGraphMapper mapper = new CorpusGraphMapper(toplevelCorpus);
     SCorpusGraph corpusGraph = getJdbcTemplate().query(mapper.getSql(), mapper, mapper);
-   
+       
     SDocument docToRemove = null;
     for(SDocument doc : corpusGraph.getDocuments())
     {
@@ -64,19 +69,33 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
         break;
       }
     }
+    
+    
     if(docToRemove != null)
     {
+      SCorpus rootCorpus = (SCorpus) corpusGraph.getRoots().get(0);
+      long topID = rootCorpus.getProcessingAnnotation("annis::origID").getValue_SNUMERIC();
+   
       // remove the document from our internal representation
       corpusGraph.removeNode(docToRemove);
       
-      // TODO: write updated corpus graph in corpus table
+      // delete from corpus table and all connected rows in other tables
+      SProcessingAnnotation origIDAnno = docToRemove.getProcessingAnnotation("annis::origID");
+      if(origIDAnno != null)
+      {
+        long origID = origIDAnno.getValue_SNUMERIC();
+        getJdbcTemplate().update("DELETE FROM facts WHERE corpus_ref=? AND toplevel_corpus=?", origID, topID);
+        int changedRows = getJdbcTemplate().update("DELETE FROM corpus WHERE id=?", origID);
+        Preconditions.checkState(changedRows > 0);
+      }
+      // write updated corpus graph in corpus table
+      updatePrePost(corpusGraph);
       
-      // TODO: delete from facts table
-      // TODO: update node IDs etc
-      
-      
+      // update statistics
+      updateCorpusStats(corpusGraph);
     }
   }
+  
   
     /**
    * Appends a Salt document to an existing corpus.
@@ -159,6 +178,91 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
 //    return true; 
   }
   
+  private void updatePrePost(SCorpusGraph corpusGraph)
+  { 
+    // re-calcuate the pre and post order and append it to the corpus nodes as 
+    // processing annotation
+    int maxPrePost = getJdbcTemplate().queryForObject("SELECT max(post) FROM corpus", Integer.class);
+    corpusGraph.traverse(corpusGraph.getRoots(), 
+      SGraph.GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "calculatePrePost", 
+      new PrePostCalculator(maxPrePost+1));
+    
+    // update the corpus table for each element of the corpusGraph
+    for(SNode n : corpusGraph.getNodes())
+    {
+      SProcessingAnnotation origID = n.getProcessingAnnotation("annis::origID");
+      if(origID != null)
+      {
+        SProcessingAnnotation pre = n.getProcessingAnnotation("annis::pre");
+        if(pre != null)
+        {
+          getJdbcTemplate().update("UPDATE corpus SET pre=? WHERE id=?", 
+            pre.getValue_SNUMERIC(), origID.getValue_SNUMERIC());
+        }
+        SProcessingAnnotation post = n.getProcessingAnnotation("annis::post");
+        if(post != null)
+        {
+          getJdbcTemplate().update("UPDATE corpus SET post=? WHERE id=?", 
+            post.getValue_SNUMERIC(), origID.getValue_SNUMERIC());
+        }
+      }
+    } 
+  }
+  
+  private void updateCorpusStats(SCorpusGraph corpusGraph)
+  {
+    SCorpus root = (SCorpus) corpusGraph.getRoots().get(0);
+    SProcessingAnnotation topID = root.getProcessingAnnotation("annis::origID");
+    if(topID != null)
+    {
+      String sql = 
+        "WITH corpusselection AS (\n" +
+        "  SELECT sub.* FROM corpus AS sub, corpus AS top \n" +
+        "  WHERE top.id=? AND top.top_level IS TRUE AND sub.pre >= top.pre AND sub.post <= top.post\n" +
+        ")\n" +
+        "UPDATE corpus_stats SET \n" +
+        "  text =  (SELECT count(*) FROM text WHERE toplevel_corpus = ?),\n" +
+        "  tokens = (SELECT count(distinct id) FROM facts WHERE toplevel_corpus = ? AND is_token IS TRUE),\n" +
+        "  max_corpus_id = (SELECT max(id) FROM corpusselection),\n" +
+        "  max_corpus_pre = (SELECT max(pre) FROM corpusselection),\n" +
+        "  max_corpus_post = (SELECT max(post) FROM corpusselection) ,\n" +
+        "  max_node_id = (SELECT max(id) FROM facts WHERE toplevel_corpus = ?)\n" +
+        "WHERE id = ?";
+      getJdbcTemplate().update(sql, topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), 
+        topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC());
+    }
+  }
+  
+  private static class PrePostCalculator implements GraphTraverseHandler
+  {
+    
+    private int prePost = 0;
+    
+    public PrePostCalculator(int orderOffset)
+    {
+      this.prePost = orderOffset;
+    }
+
+    @Override
+    public void nodeReached(SGraph.GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation<SNode, SNode> relation, SNode fromNode, long order)
+    {
+      currNode.createProcessingAnnotation("annis", "pre", prePost++);
+    }
+
+    @Override
+    public void nodeLeft(SGraph.GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation<SNode, SNode> relation, SNode fromNode, long order)
+    {
+      currNode.createProcessingAnnotation("annis", "post", prePost++);
+    }
+
+    @Override
+    public boolean checkConstraint(SGraph.GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation<SNode, SNode> relation, SNode currNode, long order)
+    {
+      return true;
+    }
+    
+  }
+  
   private static class CorpusGraphMapper implements ResultSetExtractor<SCorpusGraph>,
     SqlProvider, PreparedStatementSetter
   {
@@ -185,25 +289,32 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
       Preconditions.checkState(Objects.equals(rs.getString("name"), toplevelCorpusName));
 
       SCorpus topCorpus = cg.createCorpus(null, toplevelCorpusName);
+      int topID = rs.getInt("id");
+      topCorpus.createProcessingAnnotation("annis", "origID", topID);
       Map<Integer, SCorpus> id2corpus = new HashMap<>();
-      id2corpus.put(rs.getInt("id"), topCorpus);
+      id2corpus.put(topID, topCorpus);
       
       while(rs.next())
       {
         // there should be only one top-level corpus
         Preconditions.checkState(Objects.equals(rs.getBoolean("top_level"), Boolean.FALSE));
+        
+        int id = rs.getInt("id");
+        
         Integer[] ancestors = (Integer[]) rs.getArray("a").getArray();
         SCorpus parent = id2corpus.get(ancestors[1]);
         Preconditions.checkState(parent != null);
         if("DOCUMENT".equals(rs.getString("type")))
         {
-          parent.getGraph().createDocument(parent, rs.getString("name"));
+          SDocument doc = parent.getGraph().createDocument(parent, rs.getString("name"));
+          doc.createProcessingAnnotation("annis", "origID", id);
         }
         else
         {
           // subcorpus
           SCorpus subcorpus = parent.getGraph().createCorpus(parent, rs.getString("name"));
-          id2corpus.put(rs.getInt("id"), subcorpus);
+          subcorpus.createProcessingAnnotation("annis", "origID", id);
+          id2corpus.put(id, subcorpus);
         }
       }
       
