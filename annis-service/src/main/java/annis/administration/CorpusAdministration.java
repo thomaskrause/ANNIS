@@ -48,6 +48,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
+import org.corpus_tools.salt.common.SDocumentGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
@@ -97,6 +98,11 @@ public class CorpusAdministration
   public void deleteDocument(String toplevelName, String documentName)
   {
     documentManagementDao.deleteDocument(toplevelName, documentName);
+  }
+  
+  public void insertDocument(String toplevelName, String documentName, SDocumentGraph docGraph)
+  {
+    documentManagementDao.insertDocument(toplevelName, documentName, docGraph);
   }
 
   public void cleanupData()

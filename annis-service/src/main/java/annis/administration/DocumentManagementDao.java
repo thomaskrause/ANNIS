@@ -15,23 +15,39 @@
  */
 package annis.administration;
 
+import annis.CommonHelper;
 import com.google.common.base.Preconditions;
-import java.sql.Array;
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.commons.io.FileUtils;
+import org.corpus_tools.pepper.common.MODULE_TYPE;
+import org.corpus_tools.pepper.common.PepperJob;
+import org.corpus_tools.pepper.common.StepDesc;
+import org.corpus_tools.pepper.connectors.impl.PepperOSGiConnector;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.common.SDocumentGraph;
+import org.corpus_tools.salt.common.STextualDS;
+import org.corpus_tools.salt.common.STextualRelation;
+import org.corpus_tools.salt.common.SToken;
+import org.corpus_tools.salt.common.SaltProject;
 import org.corpus_tools.salt.core.GraphTraverseHandler;
 import org.corpus_tools.salt.core.SGraph;
 import org.corpus_tools.salt.core.SNode;
 import org.corpus_tools.salt.core.SProcessingAnnotation;
 import org.corpus_tools.salt.core.SRelation;
+import org.eclipse.emf.common.util.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -45,6 +61,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public class DocumentManagementDao extends AbstractAdminstrationDao
 {
+  
+  private static final Logger log = LoggerFactory.getLogger(DocumentManagementDao.class);
   /**
    * Deletes a document
    * @param toplevelCorpus
@@ -104,9 +122,11 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
    * @param doc The document
    */
   @Transactional
-  public void insertDocument(String toplevelCorpus, SDocument doc)
+  public void insertDocument(String toplevelCorpus, String documentName, SDocumentGraph doc)
   {
     final ANNISFormatVersion version = ANNISFormatVersion.V3_3;
+    
+    File outputDir = convertSingleDocument(toplevelCorpus, documentName, doc);
     
     // TODO: implement
     
@@ -177,6 +197,48 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
 //      addCorpusAlias(corpusID, aliasName);
 //    }
 //    return true; 
+  }
+  
+  private File convertSingleDocument(String toplevelCorpus, String documentName, SDocumentGraph doc)
+  {
+    File annisDir = Files.createTempDir();
+    annisDir.deleteOnExit();
+    
+    File conversionDir = Files.createTempDir();
+    conversionDir.deleteOnExit();
+    
+    // remember the orignal document
+    SDocument origConnectedDocument = doc.getDocument();
+    // create a dummy corpus structure and salt project
+    SaltProject dummyProject = SaltFactory.createSaltProject();
+    SCorpusGraph dummyCorpusGraph = dummyProject.createCorpusGraph();
+    SCorpus dummyCorpus = dummyCorpusGraph.createCorpus(null, toplevelCorpus);
+    SDocument dummyDocument = dummyCorpusGraph.createDocument(dummyCorpus, documentName);
+    dummyDocument.setDocumentGraph(doc);
+    // save the project
+    dummyProject.saveSaltProject(URI.createFileURI(new File(conversionDir, "salt").getAbsolutePath()));
+    // reset to original state
+    doc.setDocument(origConnectedDocument);
+ 
+    PepperOSGiConnector connector = new PepperOSGiConnector();
+    String jobID = connector.createJob();
+    PepperJob job = connector.getJob(jobID);
+    
+    StepDesc importStep = job.createStepDesc();
+    importStep.setModuleType(MODULE_TYPE.IMPORTER);
+    importStep.setName("SaltXMLImporter");
+    
+    
+    try
+    {
+      FileUtils.deleteDirectory(conversionDir);
+    }
+    catch (IOException ex)
+    {
+      log.error("Could not delete temporary conversion files.", ex);
+    }
+    
+    return annisDir;
   }
   
   private void updatePrePost(SCorpusGraph corpusGraph)

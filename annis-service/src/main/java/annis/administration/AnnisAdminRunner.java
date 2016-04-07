@@ -40,6 +40,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.corpus_tools.salt.SaltFactory;
+import org.corpus_tools.salt.common.SDocument;
+import org.eclipse.emf.common.util.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -117,6 +120,10 @@ public class AnnisAdminRunner extends AnnisBaseRunner
     else if ("delete-document".equals(command))
     {
       doDeleteDocument(commandArgs);
+    }
+    else if("insert-document".equals(command))
+    {
+      doInsertDocument(commandArgs);
     }
     else if ("copy".equals(command))
     {
@@ -483,6 +490,18 @@ public class AnnisAdminRunner extends AnnisBaseRunner
     }
 
     corpusAdministration.deleteDocument(commandArgs.get(0), commandArgs.get(1));
+  }
+  
+  private void doInsertDocument(List<String> commandArgs)
+  {
+    if (commandArgs.size() != 3)
+    {
+      throw new UsageException("What document in which corpus do you want to insert?");
+    }
+    
+    SDocument doc = SaltFactory.createSDocument();
+    doc.loadDocumentGraph(URI.createFileURI(commandArgs.get(2)));
+    corpusAdministration.insertDocument(commandArgs.get(0), commandArgs.get(1), doc.getDocumentGraph());
   }
   
   private void doCopy(List<String> commandArgs)
