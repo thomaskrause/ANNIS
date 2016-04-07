@@ -1,4 +1,4 @@
-DELETE FROM annotations_id;
+DELETE FROM annotations_:id;
 
 INSERT INTO annotations_:id
 (
@@ -24,7 +24,7 @@ UNION
 
 SELECT DISTINCT :id, (splitanno(edge_qannotext))[1], (splitanno(edge_qannotext))[2], 
   (splitanno(edge_qannotext))[3], count(distinct rank_id) as occurences,
-  'edge', c.type, c.layer, c.name
+  'edge', edge_type, edge_namespace, edge_name
 FROM facts_:id
 WHERE
   (edge_name IS NOT NULL) OR (edge_type = 'd')
