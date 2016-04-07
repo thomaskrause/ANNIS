@@ -81,10 +81,8 @@ public class FindSqlGenerator extends AbstractSqlGenerator
       
       QueryNode n = itNodes.next();
       TableAccessStrategy tas = tables(n);
-      sb.append(indent2).append(annoCondition.getNodeAnnoNamespaceSQL(tas))
-        .append(" AS node_annotation_ns").append(i).append(",\n");
-      sb.append(indent2).append(annoCondition.getNodeAnnoNameSQL(tas))
-        .append(" AS node_annotation_name").append(i).append(",\n");
+      sb.append("(splitannocat(solution.cat").append(i).append("))[1] AS node_annotation_ns").append(i).append(",\n");
+      sb.append("(splitannocat(solution.cat").append(i).append("))[2] AS node_annotation_name").append(i).append(",\n");
       
       // corpus path is only needed once
       sb.append(indent2).append("c.path_name AS path_name");
@@ -107,36 +105,7 @@ public class FindSqlGenerator extends AbstractSqlGenerator
     
     sb.append(solutionSqlGenerator.toSql(queryData, indent+TABSTOP));
     
-    sb.append(") AS solution \n");
-    
-    Preconditions.checkArgument(!alternative.isEmpty(), "There must be at least one query node in the alternative");
-    // add the left joins with the annotation category table
-    int i=0;
-    Iterator<QueryNode> itNodes = alternative.iterator();
-    while(itNodes.hasNext())
-    {
-      i++;
-      
-      QueryNode n = itNodes.next();
-      sb.append(indent)
-        .append("LEFT JOIN annotation_category AS annotation_category")
-        .append(n.getId())
-        .append(" ON (solution.toplevel_corpus = annotation_category")
-        .append(n.getId())
-        .append(".toplevel_corpus")
-        .append(" AND solution.cat")
-        .append(i)
-        .append(" = annotation_category")
-        .append(n.getId())
-        .append(".id")
-        .append(")");
-        if(!itNodes.hasNext())
-        {
-          sb.append(",");
-        }
-        sb.append("\n");
-    }
-    
+    sb.append(") AS solution, \n");
     sb.append(indent).append("corpus AS c");
     
     return sb.toString();

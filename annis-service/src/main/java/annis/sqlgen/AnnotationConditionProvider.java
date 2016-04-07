@@ -179,15 +179,5 @@ public class AnnotationConditionProvider
 
     return false;
   }
-
-  public String getNodeAnnoNamespaceSQL(TableAccessStrategy tas)
-  {
-    return tas.aliasedColumn("annotation_category", "namespace");
-  }
-
-  public String getNodeAnnoNameSQL(TableAccessStrategy tas)
-  {
-    return tas.aliasedColumn("annotation_category", "name");
-  }
-
+  
 }

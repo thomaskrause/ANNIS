@@ -77,7 +77,7 @@ public class SolutionSqlGenerator extends AbstractUnionSqlGenerator
           // If a query node is not using annotations, fallback to NULL as the value.
           // This is important for the DISTINCT clause, since we don't want to match 
           // the annotation itself but the node.
-          cols.add("NULL::int AS cat" + i);
+          cols.add("NULL::varchar AS cat" + i);
         }
         else
         {
@@ -104,7 +104,7 @@ public class SolutionSqlGenerator extends AbstractUnionSqlGenerator
     for (i = alternative.size() + 1; i <= maxWidth; ++i)
     {
       cols.add("NULL::bigint AS id" + i);
-      cols.add("NULL::integer AS cat" + i);
+      cols.add("NULL::varchar AS cat" + i);
       if (outputNodeName)
       {
         cols.add("NULL::varchar AS salt_id" + i);
