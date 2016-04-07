@@ -216,21 +216,7 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     SProcessingAnnotation topID = root.getProcessingAnnotation("annis::origID");
     if(topID != null)
     {
-      String sql = 
-        "WITH corpusselection AS (\n" +
-        "  SELECT sub.* FROM corpus AS sub, corpus AS top \n" +
-        "  WHERE top.id=? AND top.top_level IS TRUE AND sub.pre >= top.pre AND sub.post <= top.post\n" +
-        ")\n" +
-        "UPDATE corpus_stats SET \n" +
-        "  text =  (SELECT count(*) FROM text WHERE toplevel_corpus = ?),\n" +
-        "  tokens = (SELECT count(distinct id) FROM facts WHERE toplevel_corpus = ? AND is_token IS TRUE),\n" +
-        "  max_corpus_id = (SELECT max(id) FROM corpusselection),\n" +
-        "  max_corpus_pre = (SELECT max(pre) FROM corpusselection),\n" +
-        "  max_corpus_post = (SELECT max(post) FROM corpusselection) ,\n" +
-        "  max_node_id = (SELECT max(id) FROM facts WHERE toplevel_corpus = ?)\n" +
-        "WHERE id = ?";
-      getJdbcTemplate().update(sql, topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), 
-        topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC());
+      executeSqlFromScript("update_corpus_stats.sql", makeArgs().addValue(":id", topID.getValue_SNUMERIC()));
     }
   }
   
