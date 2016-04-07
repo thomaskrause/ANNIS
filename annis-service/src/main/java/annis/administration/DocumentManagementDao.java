@@ -93,6 +93,7 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
       
       // update statistics
       updateCorpusStats(corpusGraph);
+      recreateAnnotations(corpusGraph);
     }
   }
   
@@ -230,6 +231,16 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
         "WHERE id = ?";
       getJdbcTemplate().update(sql, topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), 
         topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC(), topID.getValue_SNUMERIC());
+    }
+  }
+  
+  private void recreateAnnotations(SCorpusGraph corpusGraph)
+  {
+    SCorpus root = (SCorpus) corpusGraph.getRoots().get(0);
+    SProcessingAnnotation topID = root.getProcessingAnnotation("annis::origID");
+    if(topID != null)
+    {
+      executeSqlFromScript("update_annotations.sql", makeArgs().addValue(":id", topID.getValue_SNUMERIC()));
     }
   }
   
