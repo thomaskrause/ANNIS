@@ -90,7 +90,11 @@ FROM
     _component.type AS edge_type,
     _component.layer AS edge_namespace,
     _component.name AS edge_name,
-    annotation_category.id AS node_anno_category,
+    (
+      CASE WHEN _node_annotation.name IS NULL THEN NULL
+      ELSE concat(_node_annotation.namespace,':', _node_annotation.name)
+      END
+    ) AS node_anno_category,
     (
       CASE WHEN _node_annotation.name IS NULL THEN NULL
       ELSE concat(_node_annotation.name, ':', _node_annotation.value)
@@ -118,11 +122,6 @@ FROM
     LEFT JOIN _rank ON (_rank.node_ref = _node.id)
     LEFT JOIN _component ON (_rank.component_ref = _component.id)
     LEFT JOIN _edge_annotation ON (_edge_annotation.rank_ref = _rank.id)
-    LEFT JOIN annotation_category ON (
-      annotation_category."name" = _node_annotation."name" 
-      AND annotation_category.namespace IS NOT DISTINCT FROM _node_annotation.namespace
-      AND annotation_category.toplevel_corpus = :id
-    )
 ) as tmp
 ORDER BY corpus_ref, n_sample, is_token
 ;

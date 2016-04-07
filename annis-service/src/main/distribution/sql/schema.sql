@@ -53,18 +53,6 @@ COMMENT ON COLUMN text.id IS 'primary key';
 COMMENT ON COLUMN text.name IS 'informational name of the primary data text';
 COMMENT ON COLUMN text.text IS 'raw text data';
 
-DROP TABLE IF EXISTS annotation_category CASCADE;
-CREATE TABLE annotation_category
-(
-  id SERIAL,
-  namespace character varying COLLATE "C",
-  name character varying COLLATE "C" NOT NULL,
-  toplevel_corpus integer NOT NULL,
-  PRIMARY KEY (id),
-  FOREIGN KEY (toplevel_corpus) REFERENCES corpus (id) ON DELETE CASCADE,
-  UNIQUE (namespace, name, toplevel_corpus)
-);
-
 -- Create the parent facts table definition. Note that the order of the columns can be important.
 -- When a plan uses a "Materialize" node in a MergeJoin the complete tuple (containing all columns/attributes) will be used
 -- and any join needs to go through each attribute before the attribute it is interested in.
@@ -84,7 +72,7 @@ CREATE TABLE facts (
   post integer, -- post-order value
   parent integer, -- foreign key to rank.pre of the parent node, or NULL for roots
   "level" integer,
-  node_anno_category INTEGER REFERENCES annotation_category(id),
+  node_anno_category varchar COLLATE "C",
   node_annotext varchar COLLATE "C", -- the combined name and value of the annotation, separated by ":"
   span varchar COLLATE "C",
   node_qannotext varchar COLLATE "C", -- the combined qualified name (with namespace) of the annotation, separated by ":"

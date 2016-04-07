@@ -7,6 +7,15 @@ SELECT	CASE WHEN $1 IS NULL THEN NULL
 $$
   LANGUAGE sql IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION splitannocat(qannotext varchar)
+  RETURNS text[] AS 
+$$
+SELECT	CASE WHEN $1 IS NULL THEN NULL
+	ELSE (regexp_matches($1, '^([^:]*):(.*)'))
+	END
+$$
+  LANGUAGE sql IMMUTABLE;
+
 -- helper to make the SQL for some import statements easier
 CREATE OR REPLACE FUNCTION top_corpus_pre(integer) 
 RETURNS integer
