@@ -12,6 +12,7 @@
         <exclude>bin/</exclude>
         <exclude>log/*.log</exclude>
         <exclude>conf/shiro.ini</exclude>
+        <exclude>pepper/</exclude>
       </excludes>
       <outputDirectory></outputDirectory>
     </fileSet>
@@ -48,6 +49,13 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <fileMode>0644</fileMode>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>pepper</outputDirectory>
+      <unpack>true</unpack>
+      <includes>
+        <include>org.corpus-tools:pepper-lib:zip:3.0.0</include>
+      </includes>
     </dependencySet>
   </dependencySets>
 </assembly>

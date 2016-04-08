@@ -213,7 +213,7 @@
  
  <bean id="documentManagementDao" class="annis.administration.DocumentManagementDao" lazy-init="true"
       parent="adminDaoBase">
-  
+   <property name="pepperPluginDir" value="${annis.home}/pepper/org.corpus-tools.pepper-lib_3.0.0/plugins/"/>
  </bean>
  
  <bean id="administrationDao" class="annis.administration.AdministrationDao" lazy-init="true"

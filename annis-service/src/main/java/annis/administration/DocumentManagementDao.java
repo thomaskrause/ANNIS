@@ -27,7 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.commons.io.FileUtils;
+import org.corpus_tools.pepper.cli.PepperStarterConfiguration;
 import org.corpus_tools.pepper.common.MODULE_TYPE;
+import org.corpus_tools.pepper.common.PepperConfiguration;
 import org.corpus_tools.pepper.common.PepperJob;
 import org.corpus_tools.pepper.common.StepDesc;
 import org.corpus_tools.pepper.connectors.impl.PepperOSGiConnector;
@@ -63,6 +65,9 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
 {
   
   private static final Logger log = LoggerFactory.getLogger(DocumentManagementDao.class);
+  
+  private String pepperPluginDir;
+  
   /**
    * Deletes a document
    * @param toplevelCorpus
@@ -126,7 +131,7 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
   {
     final ANNISFormatVersion version = ANNISFormatVersion.V3_3;
     
-    File outputDir = convertSingleDocument(toplevelCorpus, documentName, doc);
+     File outputDir = convertSingleDocument(toplevelCorpus, documentName, doc);
     
     // TODO: implement
     
@@ -220,7 +225,12 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     // reset to original state
     doc.setDocument(origConnectedDocument);
  
+    PepperStarterConfiguration pepperConfig = new PepperStarterConfiguration();
+    pepperConfig.setProperty(PepperStarterConfiguration.PROP_PLUGIN_PATH, getPepperPluginDir());
+    
     PepperOSGiConnector connector = new PepperOSGiConnector();
+    connector.setConfiguration(pepperConfig);
+    connector.init();
     String jobID = connector.createJob();
     PepperJob job = connector.getJob(jobID);
     
@@ -291,6 +301,18 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
       executeSqlFromScript("update_annotations.sql", makeArgs().addValue(":id", topID.getValue_SNUMERIC()));
     }
   }
+
+  public String getPepperPluginDir()
+  {
+    return pepperPluginDir;
+  }
+
+  public void setPepperPluginDir(String pepperPluginDir)
+  {
+    this.pepperPluginDir = pepperPluginDir;
+  }
+  
+  
   
   private static class PrePostCalculator implements GraphTraverseHandler
   {

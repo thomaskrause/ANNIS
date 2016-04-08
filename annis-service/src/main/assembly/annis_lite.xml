@@ -13,6 +13,7 @@
       <excludes>
         <exclude>bin/</exclude>
         <exclude>log/*.log</exclude>
+        <exclude>pepper/</exclude>
         <exclude>conf/shiro.ini</exclude>
       </excludes>
       <outputDirectory></outputDirectory>
