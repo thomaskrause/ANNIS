@@ -26,6 +26,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.corpus_tools.pepper.cli.PepperStarterConfiguration;
 import org.corpus_tools.pepper.common.MODULE_TYPE;
@@ -208,7 +210,7 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
   {
     File annisDir = Files.createTempDir();
     annisDir.deleteOnExit();
-    
+        
     File conversionDir = Files.createTempDir();
     conversionDir.deleteOnExit();
     
@@ -221,7 +223,8 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     SDocument dummyDocument = dummyCorpusGraph.createDocument(dummyCorpus, documentName);
     dummyDocument.setDocumentGraph(doc);
     // save the project
-    dummyProject.saveSaltProject(URI.createFileURI(new File(conversionDir, "salt").getAbsolutePath()));
+    URI importURI = URI.createFileURI(new File(conversionDir, "salt").getAbsolutePath());
+    dummyProject.saveSaltProject(importURI);
     // reset to original state
     doc.setDocument(origConnectedDocument);
  
@@ -231,13 +234,38 @@ public class DocumentManagementDao extends AbstractAdminstrationDao
     PepperOSGiConnector connector = new PepperOSGiConnector();
     connector.setConfiguration(pepperConfig);
     connector.init();
+    connector.update("org.corpus-tools", "pepperModules-ANNISModules", "http://central.maven.org/maven2/", false, false);
+    
     String jobID = connector.createJob();
     PepperJob job = connector.getJob(jobID);
     
     StepDesc importStep = job.createStepDesc();
     importStep.setModuleType(MODULE_TYPE.IMPORTER);
-    importStep.setName("SaltXMLImporter");
+    importStep.getCorpusDesc().getFormatDesc().setFormatName("SaltXML");
+    importStep.getCorpusDesc().setCorpusPath(importURI);
     
+    Properties exportProps = new Properties();
+    exportProps.put("corpusName", toplevelCorpus);
+    
+    StepDesc exportStep = job.createStepDesc();
+    exportStep.setModuleType(MODULE_TYPE.EXPORTER);
+    exportStep.getCorpusDesc().getFormatDesc().setFormatName("ANNIS");
+    exportStep.getCorpusDesc().setCorpusPath(URI.createFileURI(annisDir.getAbsolutePath()));
+    exportStep.setProps(exportProps);
+    
+    job.addStepDesc(importStep);
+    job.addStepDesc(exportStep);
+    
+    job.convert();
+    
+    try
+    {
+      connector.stopOSGi();
+    }
+    catch (Exception ex)
+    {
+      log.error("Could not stop Pepper OSGI", ex);
+    }
     
     try
     {
