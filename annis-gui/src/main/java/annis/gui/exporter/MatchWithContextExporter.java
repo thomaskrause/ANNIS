@@ -59,8 +59,8 @@ public class MatchWithContextExporter extends SaltBasedExporter
   
   private static class IsDominatedByMatch implements GraphTraverseHandler
   {
-    
-    boolean result = false;
+   
+    Long matchedNode = null;
 
     @Override
     public void nodeReached(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode,
@@ -69,7 +69,7 @@ public class MatchWithContextExporter extends SaltBasedExporter
       SFeature matchedAnno = currNode.getFeature(AnnisConstants.ANNIS_NS, AnnisConstants.FEAT_MATCHEDNODE);
       if(matchedAnno != null)
       {
-        this.result = true;
+        matchedNode = matchedAnno.getValue_SNUMERIC();
       }
     }
 
@@ -84,7 +84,7 @@ public class MatchWithContextExporter extends SaltBasedExporter
     public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId,
         SRelation relation, SNode currNode, long order)
     {
-      if(this.result)
+      if(this.matchedNode != null)
       {
         // don't traverse any further if matched node was found 
         return false;
@@ -113,33 +113,38 @@ public class MatchWithContextExporter extends SaltBasedExporter
       if(orderedToken != null)
       {
         ListIterator<SToken> it = orderedToken.listIterator();
-        boolean lastTokenWasMatched = false;
+        long lastTokenWasMatched = -1;
         while(it.hasNext())
         {
           SToken tok = it.next();
           
           if(it.hasPrevious())
           {
-            char seperator = ' '; // default to space as seperator
+            String seperator = " "; // default to space as separator
             
             List<SNode> root = new LinkedList<>();
             root.add(tok);
             IsDominatedByMatch traverser = new IsDominatedByMatch();
             graph.traverse(root, GRAPH_TRAVERSE_TYPE.BOTTOM_UP_DEPTH_FIRST, "IsDominatedByMatch", traverser);
-            if(traverser.result)
+            if(traverser.matchedNode != null)
             {
-              // is dominated by a matched node, thus use tab to seperate the non-matches from the matches
-              if(!lastTokenWasMatched)
+              // is dominated by a (new) matched node, thus use tab to seperate the non-matches from the matches
+              if(lastTokenWasMatched < 0)
               {
-                seperator = '\t';
+                seperator = "\t";                  
               }
-              lastTokenWasMatched = true;
+              else if(lastTokenWasMatched != (long) traverser.matchedNode)
+              {
+                // always leave an empty column between two matches, even if there is no actual context
+                seperator = "\t\t";
+              }
+              lastTokenWasMatched = traverser.matchedNode;
             }
-            else if(lastTokenWasMatched)
+            else if(lastTokenWasMatched >= 0)
             {
               // also mark the end of a match with the tab
-              seperator = '\t';
-              lastTokenWasMatched = false;
+              seperator = "\t";
+              lastTokenWasMatched = -1;
             }
             out.append(seperator);
           } // end if has previous
